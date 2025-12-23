@@ -5,8 +5,9 @@ import (
 )
 
 type Engine struct {
-	orderBook    *OrderBook
-	tradeHistory []*Trade
+	orderBook      *OrderBook
+	incomingOrders chan *Order
+	trades         chan *Trade
 }
 
 type Trade struct {
@@ -19,8 +20,18 @@ type Trade struct {
 
 func NewEngine() *Engine {
 	return &Engine{
-		orderBook:    NewOrderBook(),
-		tradeHistory: []*Trade{},
+		orderBook:      NewOrderBook(),
+		incomingOrders: make(chan *Order),
+		trades:         make(chan *Trade),
+	}
+}
+
+func (e *Engine) Start() {
+	for order := range e.incomingOrders {
+		trades := e.PlaceOrder(order)
+		for _, trade := range trades {
+			e.trades <- trade
+		}
 	}
 }
 

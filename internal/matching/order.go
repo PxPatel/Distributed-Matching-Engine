@@ -23,6 +23,7 @@ const (
 
 type Order struct {
 	ID        uint64
+	UserID    string
 	Symbol    string
 	OrderType OrderType
 	Side      SideType
@@ -45,9 +46,10 @@ func (o *Order) IsValid() bool {
 	return true
 }
 
-func NewOrder(id uint64, orderType OrderType, side SideType, price float64, quantity int) *Order {
+func NewOrder(id uint64, userId string, orderType OrderType, side SideType, price float64, quantity int) *Order {
 	return &Order{
 		ID:        id,
+		UserID:    userId,
 		Symbol:    "COOTX",
 		OrderType: orderType,
 		Side:      side,
