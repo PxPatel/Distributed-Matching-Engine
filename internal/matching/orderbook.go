@@ -41,7 +41,7 @@ type PriceLevelOrders struct {
 	Asks []*Order
 }
 
-func (orderBook OrderBook) GetOrdersByPrice(priceLevel float64) *PriceLevelOrders {
+func (orderBook *OrderBook) GetOrdersByPrice(priceLevel float64) *PriceLevelOrders {
 	return &PriceLevelOrders{
 		Bids: orderBook.bids[priceLevel],
 		Asks: orderBook.asks[priceLevel],
@@ -49,7 +49,7 @@ func (orderBook OrderBook) GetOrdersByPrice(priceLevel float64) *PriceLevelOrder
 }
 
 // Search, given orderId
-func (orderBook OrderBook) SearchById(orderId uint64) *Order {
+func (orderBook *OrderBook) SearchById(orderId uint64) *Order {
 	// Check bids
 	foundOrder, ok, _, _ := findOrderInBookSide(orderBook.bids, orderId)
 	if ok {
@@ -75,7 +75,7 @@ func findOrderInBookSide(bookSide map[float64][]*Order, orderId uint64) (*Order,
 	return nil, false, 0.0, 0
 }
 
-func (orderBook OrderBook) GetBestBid() (float64, []*Order) {
+func (orderBook *OrderBook) GetBestBid() (float64, []*Order) {
 	bids := orderBook.bids
 
 	if len(bids) == 0 {
@@ -92,7 +92,7 @@ func (orderBook OrderBook) GetBestBid() (float64, []*Order) {
 	return max, bids[max]
 }
 
-func (orderBook OrderBook) GetBestAsk() (float64, []*Order) {
+func (orderBook *OrderBook) GetBestAsk() (float64, []*Order) {
 	asks := orderBook.asks
 
 	if len(asks) == 0 {
@@ -109,11 +109,11 @@ func (orderBook OrderBook) GetBestAsk() (float64, []*Order) {
 	return min, asks[min]
 }
 
-func (orderBook OrderBook) DeleteBidBlock(priceLevel float64) bool {
+func (orderBook *OrderBook) DeleteBidBlock(priceLevel float64) bool {
 	return DeletePriceBlock(orderBook.bids, priceLevel)
 }
 
-func (orderBook OrderBook) DeleteAskBlock(priceLevel float64) bool {
+func (orderBook *OrderBook) DeleteAskBlock(priceLevel float64) bool {
 	return DeletePriceBlock(orderBook.asks, priceLevel)
 }
 
@@ -126,7 +126,7 @@ func DeletePriceBlock(bookSide map[float64][]*Order, priceLevel float64) bool {
 	return false
 }
 
-func (orderBook OrderBook) DeleteOrderById(orderId uint64) bool {
+func (orderBook *OrderBook) DeleteOrderById(orderId uint64) bool {
 	return orderBook.DeleteBidOrder(orderId) || orderBook.DeleteAskOrder(orderId)
 }
 

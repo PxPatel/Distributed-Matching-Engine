@@ -10,9 +10,9 @@ import (
 // TestOrderTypeConstants tests that order type constants are correctly defined
 func TestOrderTypeConstants(t *testing.T) {
 	tests := []struct {
-		name     string
+		name      string
 		orderType matching.OrderType
-		expected int
+		expected  int
 	}{
 		{"NoActionOrder", matching.NoActionOrder, 0},
 		{"MarketOrder", matching.MarketOrder, 1},
