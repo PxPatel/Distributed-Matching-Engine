@@ -7,6 +7,7 @@ type ErrorCode string
 
 const (
 	ErrInvalidRequest   ErrorCode = "INVALID_REQUEST"
+	ErrInvalidOrderId   ErrorCode = "INVALID ORDER_ID"
 	ErrInvalidOrderType ErrorCode = "INVALID_ORDER_TYPE"
 	ErrInvalidSide      ErrorCode = "INVALID_SIDE"
 	ErrInvalidPrice     ErrorCode = "INVALID_PRICE"
@@ -45,6 +46,12 @@ func NewHTTPError(statusCode int, code ErrorCode, message string, details map[st
 
 func ErrBadRequest(message string, details map[string]interface{}) *HTTPError {
 	return NewHTTPError(http.StatusBadRequest, ErrInvalidRequest, message, details)
+}
+
+func ErrInvalidOrderIdError(providedType string) *HTTPError {
+	return NewHTTPError(http.StatusBadRequest, ErrInvalidOrderId,
+		"Invalid or missing order id'",
+		map[string]interface{}{"provided_value": providedType})
 }
 
 func ErrInvalidOrderTypeError(providedType string) *HTTPError {

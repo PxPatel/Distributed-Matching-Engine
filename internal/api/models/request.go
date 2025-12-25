@@ -6,8 +6,9 @@ import (
 
 // SubmitOrderRequest represents a single order submission
 type SubmitOrderRequest struct {
+	OrderID   string  `json:"order_id"`
 	UserID    string  `json:"user_id"`
-	OrderType string  `json:"order_type"` // "market" | "limit"
+	OrderType string  `json:"order_type"` // "market" | "limit" | "cancel"
 	Side      string  `json:"side"`       // "buy" | "sell"
 	Price     float64 `json:"price"`
 	Quantity  int     `json:"quantity"`
@@ -22,7 +23,7 @@ func (r *SubmitOrderRequest) Validate() *HTTPError {
 
 	// Validate order_type
 	orderType := strings.ToLower(strings.TrimSpace(r.OrderType))
-	if orderType != "market" && orderType != "limit" {
+	if orderType != "market" && orderType != "limit" && orderType != "cancel" {
 		return ErrInvalidOrderTypeError(r.OrderType)
 	}
 
@@ -44,6 +45,12 @@ func (r *SubmitOrderRequest) Validate() *HTTPError {
 		}
 	}
 
+	if orderType == "cancel" {
+		if strings.TrimSpace(r.OrderID) == "" {
+			return ErrInvalidOrderIdError(r.OrderID)
+		}
+	}
+
 	return nil
 }
 
@@ -58,9 +65,9 @@ func (r *BatchOrderRequest) Validate() *HTTPError {
 		return ErrBadRequest("orders array cannot be empty", map[string]interface{}{"field": "orders"})
 	}
 
-	if len(r.Orders) > 1000 {
+	if len(r.Orders) > 100 {
 		return ErrBadRequest("batch size cannot exceed 1000 orders",
-			map[string]interface{}{"field": "orders", "max_size": 1000, "provided_size": len(r.Orders)})
+			map[string]interface{}{"field": "orders", "max_size": 100, "provided_size": len(r.Orders)})
 	}
 
 	return nil
