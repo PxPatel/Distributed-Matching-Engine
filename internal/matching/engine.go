@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -191,6 +192,7 @@ func (e *Engine) GetRecentTrades(limit int) []*Trade {
 	start := len(e.tradeHistory) - limit
 	trades := make([]*Trade, limit)
 	copy(trades, e.tradeHistory[start:])
+	slices.Reverse(trades)
 
 	return trades
 }

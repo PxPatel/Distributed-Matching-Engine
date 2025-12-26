@@ -190,8 +190,8 @@ func TestTradeHistoryLimit(t *testing.T) {
 		t.Errorf("Expected 5 trades (max history), got %d", len(trades))
 	}
 
-	// Should be trades 5-9
-	if trades[0].BuyOrderID != 5 {
+	// Should be trades 5-9 in reverse order
+	if trades[0].BuyOrderID != 9 {
 		t.Errorf("Expected oldest trade to be BuyOrderID=5, got %d", trades[0].BuyOrderID)
 	}
 }
