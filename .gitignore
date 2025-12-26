@@ -20,6 +20,7 @@ go.work
 
 # Trade logs
 trades.log
+**/test_trades.log
 
 # Environment variables
 .env
