@@ -7,29 +7,43 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
+	"github.com/PxPatel/trading-system/config"
 	"github.com/PxPatel/trading-system/internal/api/handlers"
 	"github.com/PxPatel/trading-system/internal/api/logger"
 	"github.com/PxPatel/trading-system/internal/api/routes"
 	"github.com/PxPatel/trading-system/internal/matching"
 )
 
-const (
-	defaultPort    = "8080"
-	shutdownTimeout = 10 * time.Second
-)
-
 func main() {
-	// Initialize logger
-	logger.SetMinLevel(logger.INFO)
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load configuration: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Initialize logger with config
+	logLevel := logger.INFO
+	switch cfg.Logger.Level {
+	case "DEBUG":
+		logLevel = logger.DEBUG
+	case "WARN":
+		logLevel = logger.WARN
+	case "ERROR":
+		logLevel = logger.ERROR
+	}
+	logger.SetMinLevel(logLevel)
 
 	logger.Info("Starting Distributed Matching Engine API Server", map[string]interface{}{
 		"version": "1.0.0",
 	})
 
-	// Create matching engine
-	engine := matching.NewEngine()
+	// Create matching engine with config
+	engine := matching.NewEngineWithConfig(&matching.EngineConfig{
+		TradeHistorySize: cfg.Engine.TradeHistorySize,
+		TradeLogPath:     cfg.Engine.TradeLogPath,
+	})
 	defer func() {
 		if err := engine.Close(); err != nil {
 			logger.Error("Failed to close engine", map[string]interface{}{
@@ -44,26 +58,20 @@ func main() {
 	// Setup routes with middleware
 	handler := routes.SetupRoutes(engineHolder)
 
-	// Get port from environment or use default
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
-	}
-
-	// Create HTTP server
+	// Create HTTP server with config
 	server := &http.Server{
-		Addr:         ":" + port,
+		Addr:         ":" + cfg.Server.Port,
 		Handler:      handler,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
+		ReadTimeout:  cfg.Server.ReadTimeout,
+		WriteTimeout: cfg.Server.WriteTimeout,
+		IdleTimeout:  cfg.Server.IdleTimeout,
 	}
 
 	// Start server in a goroutine
 	go func() {
 		logger.Info("Server starting", map[string]interface{}{
-			"port":    port,
-			"address": fmt.Sprintf("http://localhost:%s", port),
+			"port":    cfg.Server.Port,
+			"address": fmt.Sprintf("http://localhost:%s", cfg.Server.Port),
 		})
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -75,7 +83,7 @@ func main() {
 	}()
 
 	logger.Info("Server started successfully", map[string]interface{}{
-		"port": port,
+		"port": cfg.Server.Port,
 	})
 
 	// Wait for interrupt signal to gracefully shutdown the server
@@ -86,7 +94,7 @@ func main() {
 	logger.Info("Server shutting down...", nil)
 
 	// Graceful shutdown with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {

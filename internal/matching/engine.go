@@ -62,8 +62,22 @@ func (tp *TradePersister) Close() error {
 	return tp.file.Close()
 }
 
+// EngineConfig holds configuration for the engine
+type EngineConfig struct {
+	TradeHistorySize int
+	TradeLogPath     string
+}
+
 func NewEngine() *Engine {
-	persister, err := NewTradePersister("trades.log")
+	return NewEngineWithConfig(&EngineConfig{
+		TradeHistorySize: 1000,
+		TradeLogPath:     "trades.log",
+	})
+}
+
+// NewEngineWithConfig creates a new engine with custom configuration
+func NewEngineWithConfig(cfg *EngineConfig) *Engine {
+	persister, err := NewTradePersister(cfg.TradeLogPath)
 	if err != nil {
 		// Fallback to no persistence if file can't be opened
 		persister = nil
@@ -74,8 +88,8 @@ func NewEngine() *Engine {
 		incomingOrders: make(chan *Order),
 		trades:         make(chan *Trade),
 		orderTracker:   make(map[uint64]*Order),
-		tradeHistory:   make([]*Trade, 0, 1000),
-		maxHistory:     1000,
+		tradeHistory:   make([]*Trade, 0, cfg.TradeHistorySize),
+		maxHistory:     cfg.TradeHistorySize,
 		nextOrderID:    1,
 		tradePersister: persister,
 	}

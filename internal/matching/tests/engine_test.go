@@ -20,16 +20,16 @@ func TestPlaceMarketOrderBuy(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add some ask orders (liquidity to buy against)
-	ask1 := matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 10)
-	ask2 := matching.NewOrder(2, matching.LimitOrder, matching.Sell, 102.0, 20)
-	ask3 := matching.NewOrder(3, matching.LimitOrder, matching.Sell, 103.0, 15)
+	ask1 := matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 10)
+	ask2 := matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Sell, 102.0, 20)
+	ask3 := matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Sell, 103.0, 15)
 
 	engine.PlaceOrder(ask1)
 	engine.PlaceOrder(ask2)
 	engine.PlaceOrder(ask3)
 
 	// Place market buy order that fully fills against best ask
-	marketBuy := matching.NewOrder(100, matching.MarketOrder, matching.Buy, 0.0, 10)
+	marketBuy := matching.NewOrder(100, "user_test", matching.MarketOrder, matching.Buy, 0.0, 10)
 	trades := engine.PlaceOrder(marketBuy)
 
 	if len(trades) != 1 {
@@ -54,16 +54,16 @@ func TestPlaceMarketOrderSell(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add some bid orders (liquidity to sell against)
-	bid1 := matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10)
-	bid2 := matching.NewOrder(2, matching.LimitOrder, matching.Buy, 99.0, 20)
-	bid3 := matching.NewOrder(3, matching.LimitOrder, matching.Buy, 98.0, 15)
+	bid1 := matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
+	bid2 := matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Buy, 99.0, 20)
+	bid3 := matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Buy, 98.0, 15)
 
 	engine.PlaceOrder(bid1)
 	engine.PlaceOrder(bid2)
 	engine.PlaceOrder(bid3)
 
 	// Place market sell order
-	marketSell := matching.NewOrder(100, matching.MarketOrder, matching.Sell, 0.0, 10)
+	marketSell := matching.NewOrder(100, "user_test", matching.MarketOrder, matching.Sell, 0.0, 10)
 	trades := engine.PlaceOrder(marketSell)
 
 	if len(trades) != 1 {
@@ -88,12 +88,12 @@ func TestMarketOrderPartialFill(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add smaller ask orders
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 5))
-	engine.PlaceOrder(matching.NewOrder(2, matching.LimitOrder, matching.Sell, 102.0, 10))
-	engine.PlaceOrder(matching.NewOrder(3, matching.LimitOrder, matching.Sell, 103.0, 8))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 5))
+	engine.PlaceOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Sell, 102.0, 10))
+	engine.PlaceOrder(matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Sell, 103.0, 8))
 
 	// Place market buy that requires multiple fills
-	marketBuy := matching.NewOrder(100, matching.MarketOrder, matching.Buy, 0.0, 20)
+	marketBuy := matching.NewOrder(100, "user_test", matching.MarketOrder, matching.Buy, 0.0, 20)
 	trades := engine.PlaceOrder(marketBuy)
 
 	// Should create 3 trades: 5 @ 101, 10 @ 102, 5 @ 103
@@ -128,7 +128,7 @@ func TestMarketOrderNoLiquidity(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Place market buy with no asks in book
-	marketBuy := matching.NewOrder(100, matching.MarketOrder, matching.Buy, 0.0, 10)
+	marketBuy := matching.NewOrder(100, "user_test", matching.MarketOrder, matching.Buy, 0.0, 10)
 	trades := engine.PlaceOrder(marketBuy)
 
 	// Should create no trades
@@ -142,11 +142,11 @@ func TestMarketOrderInsufficientLiquidity(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add limited liquidity
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 5))
-	engine.PlaceOrder(matching.NewOrder(2, matching.LimitOrder, matching.Sell, 102.0, 8))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 5))
+	engine.PlaceOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Sell, 102.0, 8))
 
 	// Place market buy larger than available liquidity
-	marketBuy := matching.NewOrder(100, matching.MarketOrder, matching.Buy, 0.0, 20)
+	marketBuy := matching.NewOrder(100, "user_test", matching.MarketOrder, matching.Buy, 0.0, 20)
 	trades := engine.PlaceOrder(marketBuy)
 
 	// Should only fill what's available: 5 + 8 = 13
@@ -169,10 +169,10 @@ func TestPlaceLimitOrderBuyImmediate(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add ask order
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 10))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 10))
 
 	// Place limit buy at or above best ask
-	limitBuy := matching.NewOrder(100, matching.LimitOrder, matching.Buy, 101.0, 10)
+	limitBuy := matching.NewOrder(100, "user_test", matching.LimitOrder, matching.Buy, 101.0, 10)
 	trades := engine.PlaceOrder(limitBuy)
 
 	if len(trades) != 1 {
@@ -189,10 +189,10 @@ func TestPlaceLimitOrderSellImmediate(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add bid order
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10))
 
 	// Place limit sell at or below best bid
-	limitSell := matching.NewOrder(100, matching.LimitOrder, matching.Sell, 100.0, 10)
+	limitSell := matching.NewOrder(100, "user_test", matching.LimitOrder, matching.Sell, 100.0, 10)
 	trades := engine.PlaceOrder(limitSell)
 
 	if len(trades) != 1 {
@@ -209,7 +209,7 @@ func TestPlaceLimitOrderAddToBook(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Place limit buy below any asks
-	limitBuy := matching.NewOrder(100, matching.LimitOrder, matching.Buy, 99.0, 10)
+	limitBuy := matching.NewOrder(100, "user_test", matching.LimitOrder, matching.Buy, 99.0, 10)
 	trades := engine.PlaceOrder(limitBuy)
 
 	// Should create no trades
@@ -218,7 +218,7 @@ func TestPlaceLimitOrderAddToBook(t *testing.T) {
 	}
 
 	// Place limit sell above any bids (should also be added to book)
-	limitSell := matching.NewOrder(101, matching.LimitOrder, matching.Sell, 102.0, 15)
+	limitSell := matching.NewOrder(101, "user_test", matching.LimitOrder, matching.Sell, 102.0, 15)
 	trades = engine.PlaceOrder(limitSell)
 
 	if len(trades) != 0 {
@@ -227,7 +227,7 @@ func TestPlaceLimitOrderAddToBook(t *testing.T) {
 
 	// Now place matching orders
 	// Market buy should match against the sell we added
-	marketBuy := matching.NewOrder(200, matching.MarketOrder, matching.Buy, 0.0, 10)
+	marketBuy := matching.NewOrder(200, "user_test", matching.MarketOrder, matching.Buy, 0.0, 10)
 	trades = engine.PlaceOrder(marketBuy)
 
 	if len(trades) != 1 {
@@ -244,10 +244,10 @@ func TestPlaceLimitOrderPartialFillAndRest(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add smaller ask order
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 5))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 5))
 
 	// Place limit buy that partially matches
-	limitBuy := matching.NewOrder(100, matching.LimitOrder, matching.Buy, 101.0, 15)
+	limitBuy := matching.NewOrder(100, "user_test", matching.LimitOrder, matching.Buy, 101.0, 15)
 	trades := engine.PlaceOrder(limitBuy)
 
 	// Should create 1 trade for 5 units
@@ -261,7 +261,7 @@ func TestPlaceLimitOrderPartialFillAndRest(t *testing.T) {
 
 	// Remaining 10 units should be added to book
 	// Place market sell to verify
-	marketSell := matching.NewOrder(200, matching.MarketOrder, matching.Sell, 0.0, 8)
+	marketSell := matching.NewOrder(200, "user_test", matching.MarketOrder, matching.Sell, 0.0, 8)
 	trades = engine.PlaceOrder(marketSell)
 
 	if len(trades) != 1 {
@@ -278,7 +278,7 @@ func TestCancelOrder(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Place limit order
-	limitBuy := matching.NewOrder(100, matching.LimitOrder, matching.Buy, 99.0, 10)
+	limitBuy := matching.NewOrder(100, "user_test", matching.LimitOrder, matching.Buy, 99.0, 10)
 	engine.PlaceOrder(limitBuy)
 
 	// Cancel the order
@@ -295,7 +295,7 @@ func TestCancelOrder(t *testing.T) {
 
 	// Verify order is no longer in book
 	// Place market sell that would match if order still existed
-	marketSell := matching.NewOrder(200, matching.MarketOrder, matching.Sell, 0.0, 5)
+	marketSell := matching.NewOrder(200, "user_test", matching.MarketOrder, matching.Sell, 0.0, 5)
 	trades := engine.PlaceOrder(marketSell)
 
 	if len(trades) != 0 {
@@ -308,11 +308,11 @@ func TestCancelOrderViaOrderType(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Place limit order
-	limitBuy := matching.NewOrder(100, matching.LimitOrder, matching.Buy, 99.0, 10)
+	limitBuy := matching.NewOrder(100, "user_test", matching.LimitOrder, matching.Buy, 99.0, 10)
 	engine.PlaceOrder(limitBuy)
 
 	// Cancel using CancelOrder type
-	cancelOrder := matching.NewOrder(100, matching.CancelOrder, matching.Buy, 0.0, 0)
+	cancelOrder := matching.NewOrder(100, "user_test", matching.CancelOrder, matching.Buy, 0.0, 0)
 	trades := engine.PlaceOrder(cancelOrder)
 
 	// Cancel orders don't produce trades
@@ -336,12 +336,12 @@ func TestPricePriority(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add asks at different prices
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Sell, 103.0, 10))
-	engine.PlaceOrder(matching.NewOrder(2, matching.LimitOrder, matching.Sell, 101.0, 10))
-	engine.PlaceOrder(matching.NewOrder(3, matching.LimitOrder, matching.Sell, 102.0, 10))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 103.0, 10))
+	engine.PlaceOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Sell, 101.0, 10))
+	engine.PlaceOrder(matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Sell, 102.0, 10))
 
 	// Market buy should match with best (lowest) ask first
-	marketBuy := matching.NewOrder(100, matching.MarketOrder, matching.Buy, 0.0, 10)
+	marketBuy := matching.NewOrder(100, "user_test", matching.MarketOrder, matching.Buy, 0.0, 10)
 	trades := engine.PlaceOrder(marketBuy)
 
 	if len(trades) != 1 {
@@ -362,12 +362,12 @@ func TestTimePriority(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add multiple asks at same price
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 5))
-	engine.PlaceOrder(matching.NewOrder(2, matching.LimitOrder, matching.Sell, 101.0, 5))
-	engine.PlaceOrder(matching.NewOrder(3, matching.LimitOrder, matching.Sell, 101.0, 5))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 5))
+	engine.PlaceOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Sell, 101.0, 5))
+	engine.PlaceOrder(matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Sell, 101.0, 5))
 
 	// Market buy should match in time priority (FIFO)
-	marketBuy := matching.NewOrder(100, matching.MarketOrder, matching.Buy, 0.0, 5)
+	marketBuy := matching.NewOrder(100, "user_test", matching.MarketOrder, matching.Buy, 0.0, 5)
 	trades := engine.PlaceOrder(marketBuy)
 
 	if len(trades) != 1 {
@@ -385,12 +385,12 @@ func TestMultipleTrades(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add multiple asks at different prices
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 10))
-	engine.PlaceOrder(matching.NewOrder(2, matching.LimitOrder, matching.Sell, 102.0, 15))
-	engine.PlaceOrder(matching.NewOrder(3, matching.LimitOrder, matching.Sell, 103.0, 20))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 10))
+	engine.PlaceOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Sell, 102.0, 15))
+	engine.PlaceOrder(matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Sell, 103.0, 20))
 
 	// Large market buy
-	marketBuy := matching.NewOrder(100, matching.MarketOrder, matching.Buy, 0.0, 40)
+	marketBuy := matching.NewOrder(100, "user_test", matching.MarketOrder, matching.Buy, 0.0, 40)
 	trades := engine.PlaceOrder(marketBuy)
 
 	// Should create 3 trades
@@ -423,10 +423,10 @@ func TestLimitOrderPriceImprovement(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add ask at 101.0
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 10))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 10))
 
 	// Place limit buy willing to pay up to 105.0
-	limitBuy := matching.NewOrder(100, matching.LimitOrder, matching.Buy, 105.0, 10)
+	limitBuy := matching.NewOrder(100, "user_test", matching.LimitOrder, matching.Buy, 105.0, 10)
 	trades := engine.PlaceOrder(limitBuy)
 
 	if len(trades) != 1 {
@@ -444,13 +444,13 @@ func TestAggressiveLimitOrders(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Create spread: bids at 99-100, asks at 102-103
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10))
-	engine.PlaceOrder(matching.NewOrder(2, matching.LimitOrder, matching.Buy, 99.0, 10))
-	engine.PlaceOrder(matching.NewOrder(3, matching.LimitOrder, matching.Sell, 102.0, 10))
-	engine.PlaceOrder(matching.NewOrder(4, matching.LimitOrder, matching.Sell, 103.0, 10))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10))
+	engine.PlaceOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Buy, 99.0, 10))
+	engine.PlaceOrder(matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Sell, 102.0, 10))
+	engine.PlaceOrder(matching.NewOrder(4, "user_test", matching.LimitOrder, matching.Sell, 103.0, 10))
 
 	// Aggressive limit buy crosses the spread
-	limitBuy := matching.NewOrder(100, matching.LimitOrder, matching.Buy, 102.5, 15)
+	limitBuy := matching.NewOrder(100, "user_test", matching.LimitOrder, matching.Buy, 102.5, 15)
 	trades := engine.PlaceOrder(limitBuy)
 
 	// Should match only one ask
@@ -471,11 +471,11 @@ func TestAggressiveLimitOrders(t *testing.T) {
 
 // 	// Place bid and ask with same ID prefix (simulating same participant)
 // 	// Note: The engine doesn't prevent self-matching - that's typically handled at a higher level
-// 	engine.PlaceOrder(matching.NewOrder(100, matching.LimitOrder, matching.Buy, 101.0, 10))
-// 	engine.PlaceOrder(matching.NewOrder(101, matching.LimitOrder, matching.Sell, 101.0, 10))
+// 	engine.PlaceOrder(matching.NewOrder(100, "user_test", matching.LimitOrder, matching.Buy, 101.0, 10))
+// 	engine.PlaceOrder(matching.NewOrder(101, "user_test", matching.LimitOrder, matching.Sell, 101.0, 10))
 
 // 	// These should match
-// 	trades := engine.PlaceOrder(matching.NewOrder(102, matching.MarketOrder, matching.Sell, 0.0, 5))
+// 	trades := engine.PlaceOrder(matching.NewOrder(102, "user_test", matching.MarketOrder, matching.Sell, 0.0, 5))
 
 // 	if len(trades) == 0 {
 // 		t.Error("Expected orders to match (engine doesn't prevent self-matching)")
@@ -488,17 +488,17 @@ func TestFullBookExecution(t *testing.T) {
 
 	// Build a realistic order book
 	// Bids: 100(10), 99(20), 98(30)
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10))
-	engine.PlaceOrder(matching.NewOrder(2, matching.LimitOrder, matching.Buy, 99.0, 20))
-	engine.PlaceOrder(matching.NewOrder(3, matching.LimitOrder, matching.Buy, 98.0, 30))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10))
+	engine.PlaceOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Buy, 99.0, 20))
+	engine.PlaceOrder(matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Buy, 98.0, 30))
 
 	// Asks: 101(15), 102(25), 103(35)
-	engine.PlaceOrder(matching.NewOrder(11, matching.LimitOrder, matching.Sell, 101.0, 15))
-	engine.PlaceOrder(matching.NewOrder(12, matching.LimitOrder, matching.Sell, 102.0, 25))
-	engine.PlaceOrder(matching.NewOrder(13, matching.LimitOrder, matching.Sell, 103.0, 35))
+	engine.PlaceOrder(matching.NewOrder(11, "user_test", matching.LimitOrder, matching.Sell, 101.0, 15))
+	engine.PlaceOrder(matching.NewOrder(12, "user_test", matching.LimitOrder, matching.Sell, 102.0, 25))
+	engine.PlaceOrder(matching.NewOrder(13, "user_test", matching.LimitOrder, matching.Sell, 103.0, 35))
 
 	// Large market buy: should sweep through all asks
-	marketBuy := matching.NewOrder(100, matching.MarketOrder, matching.Buy, 0.0, 70)
+	marketBuy := matching.NewOrder(100, "user_test", matching.MarketOrder, matching.Buy, 0.0, 70)
 	trades := engine.PlaceOrder(marketBuy)
 
 	// Should match all asks: 15 + 25 + 30 = 70
@@ -516,7 +516,7 @@ func TestFullBookExecution(t *testing.T) {
 	}
 
 	// Now place large market sell: should sweep through all bids
-	marketSell := matching.NewOrder(200, matching.MarketOrder, matching.Sell, 0.0, 60)
+	marketSell := matching.NewOrder(200, "user_test", matching.MarketOrder, matching.Sell, 0.0, 60)
 	trades = engine.PlaceOrder(marketSell)
 
 	// Should match all bids: 10 + 20 + 30 = 60
@@ -539,11 +539,11 @@ func TestOrderSizeReduction(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add ask order
-	ask := matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 20)
+	ask := matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 20)
 	engine.PlaceOrder(ask)
 
 	// Partially fill with market buy
-	marketBuy := matching.NewOrder(100, matching.MarketOrder, matching.Buy, 0.0, 8)
+	marketBuy := matching.NewOrder(100, "user_test", matching.MarketOrder, matching.Buy, 0.0, 8)
 	trades := engine.PlaceOrder(marketBuy)
 
 	if len(trades) != 1 || trades[0].Size != 8 {
@@ -551,7 +551,7 @@ func TestOrderSizeReduction(t *testing.T) {
 	}
 
 	// Place another market buy to verify remaining size
-	marketBuy2 := matching.NewOrder(101, matching.MarketOrder, matching.Buy, 0.0, 12)
+	marketBuy2 := matching.NewOrder(101, "user_test", matching.MarketOrder, matching.Buy, 0.0, 12)
 	trades2 := engine.PlaceOrder(marketBuy2)
 
 	if len(trades2) != 1 || trades2[0].Size != 12 {
@@ -565,7 +565,7 @@ func TestEmptyEngineOperations(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Market order with no liquidity
-	marketBuy := matching.NewOrder(1, matching.MarketOrder, matching.Buy, 0.0, 10)
+	marketBuy := matching.NewOrder(1, "user_test", matching.MarketOrder, matching.Buy, 0.0, 10)
 	trades := engine.PlaceOrder(marketBuy)
 
 	if len(trades) != 0 {
@@ -573,7 +573,7 @@ func TestEmptyEngineOperations(t *testing.T) {
 	}
 
 	// Limit order should be added
-	limitBuy := matching.NewOrder(2, matching.LimitOrder, matching.Buy, 100.0, 10)
+	limitBuy := matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
 	trades = engine.PlaceOrder(limitBuy)
 
 	if len(trades) != 0 {
@@ -592,7 +592,7 @@ func TestNoActionOrderType(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Place NoActionOrder
-	noAction := matching.NewOrder(1, matching.NoActionOrder, matching.Buy, 100.0, 10)
+	noAction := matching.NewOrder(1, "user_test", matching.NoActionOrder, matching.Buy, 100.0, 10)
 	trades := engine.PlaceOrder(noAction)
 
 	// Should return nil (default case in switch)
@@ -606,10 +606,10 @@ func TestZeroSizeOrder(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add ask order
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 10))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 10))
 
 	// Market buy with zero size
-	marketBuy := matching.NewOrder(100, matching.MarketOrder, matching.Buy, 0.0, 0)
+	marketBuy := matching.NewOrder(100, "user_test", matching.MarketOrder, matching.Buy, 0.0, 0)
 	trades := engine.PlaceOrder(marketBuy)
 
 	// Should produce no trades
@@ -625,11 +625,11 @@ func TestLargeOrderExecution(t *testing.T) {
 	// Add many small asks
 	for i := 0; i < 100; i++ {
 		price := 101.0 + float64(i)*0.01
-		engine.PlaceOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Sell, price, 10))
+		engine.PlaceOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Sell, price, 10))
 	}
 
 	// Large market buy
-	marketBuy := matching.NewOrder(10000, matching.MarketOrder, matching.Buy, 0.0, 1000)
+	marketBuy := matching.NewOrder(10000, "user_test", matching.MarketOrder, matching.Buy, 0.0, 1000)
 	trades := engine.PlaceOrder(marketBuy)
 
 	// Should create 100 trades
@@ -653,10 +653,10 @@ func TestTradeTimestamps(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add ask
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 10))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 10))
 
 	// Execute market buy
-	marketBuy := matching.NewOrder(100, matching.MarketOrder, matching.Buy, 0.0, 10)
+	marketBuy := matching.NewOrder(100, "user_test", matching.MarketOrder, matching.Buy, 0.0, 10)
 	trades := engine.PlaceOrder(marketBuy)
 
 	if len(trades) != 1 {
@@ -674,29 +674,29 @@ func TestSequentialTrades(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Place initial orders
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10))
-	engine.PlaceOrder(matching.NewOrder(2, matching.LimitOrder, matching.Sell, 101.0, 10))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10))
+	engine.PlaceOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Sell, 101.0, 10))
 
 	// Execute multiple trades in sequence
 	for i := 0; i < 10; i++ {
 		if i%2 == 0 {
 			// Market sell
-			sell := matching.NewOrder(uint64(100+i), matching.MarketOrder, matching.Sell, 0.0, 5)
+			sell := matching.NewOrder(uint64(100+i), "user_test", matching.MarketOrder, matching.Sell, 0.0, 5)
 			trades := engine.PlaceOrder(sell)
 			if len(trades) > 1 {
 				t.Errorf("Trade %d: expected at most 1 trade, got %d", i, len(trades))
 			}
 			// Add new bid
-			engine.PlaceOrder(matching.NewOrder(uint64(10+i), matching.LimitOrder, matching.Buy, 100.0, 5))
+			engine.PlaceOrder(matching.NewOrder(uint64(10+i), "user_test", matching.LimitOrder, matching.Buy, 100.0, 5))
 		} else {
 			// Market buy
-			buy := matching.NewOrder(uint64(100+i), matching.MarketOrder, matching.Buy, 0.0, 5)
+			buy := matching.NewOrder(uint64(100+i), "user_test", matching.MarketOrder, matching.Buy, 0.0, 5)
 			trades := engine.PlaceOrder(buy)
 			if len(trades) > 1 {
 				t.Errorf("Trade %d: expected at most 1 trade, got %d", i, len(trades))
 			}
 			// Add new ask
-			engine.PlaceOrder(matching.NewOrder(uint64(10+i), matching.LimitOrder, matching.Sell, 101.0, 5))
+			engine.PlaceOrder(matching.NewOrder(uint64(10+i), "user_test", matching.LimitOrder, matching.Sell, 101.0, 5))
 		}
 	}
 }
@@ -706,12 +706,12 @@ func TestEdgeCaseExactFill(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Add asks with specific sizes
-	engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 10))
-	engine.PlaceOrder(matching.NewOrder(2, matching.LimitOrder, matching.Sell, 102.0, 20))
-	engine.PlaceOrder(matching.NewOrder(3, matching.LimitOrder, matching.Sell, 103.0, 30))
+	engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 10))
+	engine.PlaceOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Sell, 102.0, 20))
+	engine.PlaceOrder(matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Sell, 103.0, 30))
 
 	// Market buy that exactly fills first two levels
-	marketBuy := matching.NewOrder(100, matching.MarketOrder, matching.Buy, 0.0, 30)
+	marketBuy := matching.NewOrder(100, "user_test", matching.MarketOrder, matching.Buy, 0.0, 30)
 	trades := engine.PlaceOrder(marketBuy)
 
 	if len(trades) != 2 {
@@ -719,7 +719,7 @@ func TestEdgeCaseExactFill(t *testing.T) {
 	}
 
 	// Verify the third ask is still available
-	marketBuy2 := matching.NewOrder(101, matching.MarketOrder, matching.Buy, 0.0, 30)
+	marketBuy2 := matching.NewOrder(101, "user_test", matching.MarketOrder, matching.Buy, 0.0, 30)
 	trades2 := engine.PlaceOrder(marketBuy2)
 
 	if len(trades2) != 1 {
@@ -736,7 +736,7 @@ func TestStopOrderTypes(t *testing.T) {
 	engine := matching.NewEngine()
 
 	// Place stop market order (not implemented, should return nil)
-	stopMarket := matching.NewOrder(1, matching.StopMarketOrder, matching.Buy, 0.0, 10)
+	stopMarket := matching.NewOrder(1, "user_test", matching.StopMarketOrder, matching.Buy, 0.0, 10)
 	trades := engine.PlaceOrder(stopMarket)
 
 	if trades != nil {
@@ -744,7 +744,7 @@ func TestStopOrderTypes(t *testing.T) {
 	}
 
 	// Place stop limit order
-	stopLimit := matching.NewOrder(2, matching.StopLimitOrder, matching.Buy, 100.0, 10)
+	stopLimit := matching.NewOrder(2, "user_test", matching.StopLimitOrder, matching.Buy, 100.0, 10)
 	trades = engine.PlaceOrder(stopLimit)
 
 	if trades != nil {
@@ -761,13 +761,13 @@ func TestConcurrentOrders(t *testing.T) {
 
 	// Add initial liquidity
 	for i := 0; i < 50; i++ {
-		engine.PlaceOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Sell, 101.0+float64(i)*0.01, 10))
+		engine.PlaceOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Sell, 101.0+float64(i)*0.01, 10))
 	}
 
 	// Concurrent market buys
 	for i := 0; i < 100; i++ {
 		go func(id uint64) {
-			marketBuy := matching.NewOrder(id+1000, matching.MarketOrder, matching.Buy, 0.0, 1)
+			marketBuy := matching.NewOrder(id+1000, "user_test", matching.MarketOrder, matching.Buy, 0.0, 1)
 			engine.PlaceOrder(marketBuy)
 			done <- true
 		}(uint64(i))

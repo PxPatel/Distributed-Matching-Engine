@@ -21,6 +21,9 @@ go.work
 # Trade logs
 trades.log
 
+# Environment variables
+.env
+
 # IDE
 .vscode/
 .idea/

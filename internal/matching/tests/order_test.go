@@ -57,24 +57,25 @@ func TestNewOrder(t *testing.T) {
 	tests := []struct {
 		name      string
 		id        uint64
+		userId    string
 		orderType matching.OrderType
 		side      matching.SideType
 		price     float64
 		quantity  int
 	}{
-		{"ValidLimitBuy", 1, matching.LimitOrder, matching.Buy, 100.0, 10},
-		{"ValidLimitSell", 2, matching.LimitOrder, matching.Sell, 101.0, 20},
-		{"ValidMarketBuy", 3, matching.MarketOrder, matching.Buy, 0.0, 15},
-		{"ValidMarketSell", 4, matching.MarketOrder, matching.Sell, 0.0, 25},
-		{"LargeQuantity", 5, matching.LimitOrder, matching.Buy, 99.5, 1000000},
-		{"SmallPrice", 6, matching.LimitOrder, matching.Sell, 0.01, 100},
-		{"HighPrice", 7, matching.LimitOrder, matching.Buy, 999999.99, 1},
+		{"ValidLimitBuy", 1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10},
+		{"ValidLimitSell", 2, "user_test", matching.LimitOrder, matching.Sell, 101.0, 20},
+		{"ValidMarketBuy", 3, "user_test", matching.MarketOrder, matching.Buy, 0.0, 15},
+		{"ValidMarketSell", 4, "user_test", matching.MarketOrder, matching.Sell, 0.0, 25},
+		{"LargeQuantity", 5, "user_test", matching.LimitOrder, matching.Buy, 99.5, 1000000},
+		{"SmallPrice", 6, "user_test", matching.LimitOrder, matching.Sell, 0.01, 100},
+		{"HighPrice", 7, "user_test", matching.LimitOrder, matching.Buy, 999999.99, 1},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			before := time.Now()
-			order := matching.NewOrder(tt.id, tt.orderType, tt.side, tt.price, tt.quantity)
+			order := matching.NewOrder(tt.id, tt.userId, tt.orderType, tt.side, tt.price, tt.quantity)
 			after := time.Now()
 
 			if order.ID != tt.id {
@@ -315,7 +316,7 @@ func TestOrderSetSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			order := matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, tt.initialSize)
+			order := matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, tt.initialSize)
 			order.SetSize(tt.newSize)
 
 			if order.Size != tt.expectedSize {
@@ -327,7 +328,7 @@ func TestOrderSetSize(t *testing.T) {
 
 // TestOrderImmutability tests that order fields can be accessed
 func TestOrderFieldAccess(t *testing.T) {
-	order := matching.NewOrder(12345, matching.LimitOrder, matching.Buy, 99.99, 100)
+	order := matching.NewOrder(12345, "user_test", matching.LimitOrder, matching.Buy, 99.99, 100)
 
 	// Test all fields are accessible
 	if order.ID != 12345 {
@@ -355,7 +356,7 @@ func TestOrderFieldAccess(t *testing.T) {
 
 // TestOrderModification tests that orders can be modified after creation
 func TestOrderModification(t *testing.T) {
-	order := matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 50)
+	order := matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 50)
 
 	// Modify fields
 	order.Price = 105.0
@@ -384,7 +385,7 @@ func TestOrderConcurrentCreation(t *testing.T) {
 
 	for i := 0; i < numOrders; i++ {
 		go func(id uint64) {
-			order := matching.NewOrder(id, matching.LimitOrder, matching.Buy, 100.0, 10)
+			order := matching.NewOrder(id, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
 			if order.ID != id {
 				t.Errorf("Expected ID %d, got %d", id, order.ID)
 			}
@@ -403,10 +404,10 @@ func TestOrderTimestampAccuracy(t *testing.T) {
 	before := time.Now()
 	time.Sleep(1 * time.Millisecond) // Small delay to ensure timestamp is different
 
-	order1 := matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10)
+	order1 := matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
 
 	time.Sleep(1 * time.Millisecond)
-	order2 := matching.NewOrder(2, matching.LimitOrder, matching.Sell, 101.0, 10)
+	order2 := matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Sell, 101.0, 10)
 
 	time.Sleep(1 * time.Millisecond)
 	after := time.Now()
@@ -425,7 +426,7 @@ func TestOrderTimestampAccuracy(t *testing.T) {
 
 // TestOrderWithZeroID tests that orders can have zero ID
 func TestOrderWithZeroID(t *testing.T) {
-	order := matching.NewOrder(0, matching.LimitOrder, matching.Buy, 100.0, 10)
+	order := matching.NewOrder(0, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
 
 	if order.ID != 0 {
 		t.Errorf("Expected ID 0, got %d", order.ID)
@@ -450,7 +451,7 @@ func TestOrderEdgeCasePrices(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			order := matching.NewOrder(1, matching.LimitOrder, matching.Buy, tt.price, 10)
+			order := matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, tt.price, 10)
 			if order.IsValid() != tt.valid {
 				t.Errorf("Expected IsValid() = %v for price %f", tt.valid, tt.price)
 			}
