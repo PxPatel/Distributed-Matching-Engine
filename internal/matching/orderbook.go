@@ -177,3 +177,51 @@ func (orderBook *OrderBook) AddAskOrder(newOrder *Order) bool {
 	orderBook.asks[newOrder.Price] = block
 	return true
 }
+
+// GetAllBids returns all bid price levels sorted from highest to lowest
+func (orderBook *OrderBook) GetAllBids() []float64 {
+	prices := make([]float64, 0, len(orderBook.bids))
+	for price := range orderBook.bids {
+		prices = append(prices, price)
+	}
+
+	// Sort descending (highest bid first)
+	for i := 0; i < len(prices); i++ {
+		for j := i + 1; j < len(prices); j++ {
+			if prices[i] < prices[j] {
+				prices[i], prices[j] = prices[j], prices[i]
+			}
+		}
+	}
+
+	return prices
+}
+
+// GetAllAsks returns all ask price levels sorted from lowest to highest
+func (orderBook *OrderBook) GetAllAsks() []float64 {
+	prices := make([]float64, 0, len(orderBook.asks))
+	for price := range orderBook.asks {
+		prices = append(prices, price)
+	}
+
+	// Sort ascending (lowest ask first)
+	for i := 0; i < len(prices); i++ {
+		for j := i + 1; j < len(prices); j++ {
+			if prices[i] > prices[j] {
+				prices[i], prices[j] = prices[j], prices[i]
+			}
+		}
+	}
+
+	return prices
+}
+
+// GetBidsAtPrice returns all bid orders at a specific price
+func (orderBook *OrderBook) GetBidsAtPrice(price float64) []*Order {
+	return orderBook.bids[price]
+}
+
+// GetAsksAtPrice returns all ask orders at a specific price
+func (orderBook *OrderBook) GetAsksAtPrice(price float64) []*Order {
+	return orderBook.asks[price]
+}

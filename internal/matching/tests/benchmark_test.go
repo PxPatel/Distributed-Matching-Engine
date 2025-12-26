@@ -21,7 +21,7 @@ func BenchmarkOrderCreation(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, 100.0, 10)
+		matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
 	}
 
 	// KPI: Orders created per second
@@ -31,7 +31,7 @@ func BenchmarkOrderCreation(b *testing.B) {
 
 // BenchmarkOrderValidation benchmarks order validation speed
 func BenchmarkOrderValidation(b *testing.B) {
-	order := matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10)
+	order := matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
 	b.ReportAllocs()
 	b.ResetTimer()
 
@@ -48,7 +48,7 @@ func BenchmarkAddBidOrder(b *testing.B) {
 	ob := matching.NewOrderBook()
 	orders := make([]*matching.Order, b.N)
 	for i := 0; i < b.N; i++ {
-		orders[i] = matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, 100.0+float64(i%100)*0.01, 10)
+		orders[i] = matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, 100.0+float64(i%100)*0.01, 10)
 	}
 
 	b.ReportAllocs()
@@ -67,7 +67,7 @@ func BenchmarkAddAskOrder(b *testing.B) {
 	ob := matching.NewOrderBook()
 	orders := make([]*matching.Order, b.N)
 	for i := 0; i < b.N; i++ {
-		orders[i] = matching.NewOrder(uint64(i), matching.LimitOrder, matching.Sell, 101.0+float64(i%100)*0.01, 10)
+		orders[i] = matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Sell, 101.0+float64(i%100)*0.01, 10)
 	}
 
 	b.ReportAllocs()
@@ -88,7 +88,7 @@ func BenchmarkGetBestBid(b *testing.B) {
 	// Pre-populate with orders at different prices
 	for i := 0; i < 100; i++ {
 		price := 100.0 - float64(i)*0.01
-		ob.AddBidOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, price, 10))
+		ob.AddBidOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, price, 10))
 	}
 
 	b.ReportAllocs()
@@ -109,7 +109,7 @@ func BenchmarkGetBestAsk(b *testing.B) {
 	// Pre-populate with orders at different prices
 	for i := 0; i < 100; i++ {
 		price := 101.0 + float64(i)*0.01
-		ob.AddAskOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Sell, price, 10))
+		ob.AddAskOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Sell, price, 10))
 	}
 
 	b.ReportAllocs()
@@ -130,7 +130,7 @@ func BenchmarkSearchById(b *testing.B) {
 	// Pre-populate orderbook
 	for i := 0; i < 1000; i++ {
 		price := 100.0 + float64(i%100)*0.01
-		ob.AddBidOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, price, 10))
+		ob.AddBidOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, price, 10))
 	}
 
 	b.ReportAllocs()
@@ -149,7 +149,7 @@ func BenchmarkDeleteBidOrder(b *testing.B) {
 	// Pre-create orders
 	orders := make([]*matching.Order, b.N)
 	for i := 0; i < b.N; i++ {
-		orders[i] = matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, 100.0, 10)
+		orders[i] = matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
 	}
 
 	b.ReportAllocs()
@@ -169,7 +169,7 @@ func BenchmarkDeleteBidOrder(b *testing.B) {
 func BenchmarkMarketOrderExecution(b *testing.B) {
 	orders := make([]*matching.Order, b.N)
 	for i := 0; i < b.N; i++ {
-		orders[i] = matching.NewOrder(uint64(i+10000), matching.MarketOrder, matching.Buy, 0.0, 10)
+		orders[i] = matching.NewOrder(uint64(i+10000), "user_test", matching.MarketOrder, matching.Buy, 0.0, 10)
 	}
 
 	b.ReportAllocs()
@@ -179,7 +179,7 @@ func BenchmarkMarketOrderExecution(b *testing.B) {
 		engine := matching.NewEngine()
 		// Add liquidity
 		for j := 0; j < 10; j++ {
-			engine.PlaceOrder(matching.NewOrder(uint64(j), matching.LimitOrder, matching.Sell, 101.0+float64(j)*0.01, 10))
+			engine.PlaceOrder(matching.NewOrder(uint64(j), "user_test", matching.LimitOrder, matching.Sell, 101.0+float64(j)*0.01, 10))
 		}
 		// Execute market order
 		engine.PlaceOrder(orders[i])
@@ -193,7 +193,7 @@ func BenchmarkMarketOrderExecution(b *testing.B) {
 func BenchmarkLimitOrderExecution(b *testing.B) {
 	orders := make([]*matching.Order, b.N)
 	for i := 0; i < b.N; i++ {
-		orders[i] = matching.NewOrder(uint64(i+10000), matching.LimitOrder, matching.Buy, 101.0, 10)
+		orders[i] = matching.NewOrder(uint64(i+10000), "user_test", matching.LimitOrder, matching.Buy, 101.0, 10)
 	}
 
 	b.ReportAllocs()
@@ -202,7 +202,7 @@ func BenchmarkLimitOrderExecution(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		engine := matching.NewEngine()
 		// Add liquidity
-		engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 10))
+		engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 10))
 		// Execute limit order
 		engine.PlaceOrder(orders[i])
 	}
@@ -218,7 +218,7 @@ func BenchmarkCancelOrder(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		engine := matching.NewEngine()
-		order := matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, 100.0, 10)
+		order := matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
 		engine.PlaceOrder(order)
 		engine.CancelOrder(uint64(i))
 	}
@@ -255,17 +255,17 @@ func benchmarkOrderBookDepth(b *testing.B, depth int) {
 	for i := 0; i < depth; i++ {
 		bidPrice := 100.0 - float64(i)*0.01
 		askPrice := 101.0 + float64(i)*0.01
-		engine.PlaceOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, bidPrice, 10))
-		engine.PlaceOrder(matching.NewOrder(uint64(i+depth), matching.LimitOrder, matching.Sell, askPrice, 10))
+		engine.PlaceOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, bidPrice, 10))
+		engine.PlaceOrder(matching.NewOrder(uint64(i+depth), "user_test", matching.LimitOrder, matching.Sell, askPrice, 10))
 	}
 
 	orders := make([]*matching.Order, b.N)
 	for i := 0; i < b.N; i++ {
 		// Alternate between market buys and sells
 		if i%2 == 0 {
-			orders[i] = matching.NewOrder(uint64(i+depth*2), matching.MarketOrder, matching.Buy, 0.0, 5)
+			orders[i] = matching.NewOrder(uint64(i+depth*2), "user_test", matching.MarketOrder, matching.Buy, 0.0, 5)
 		} else {
-			orders[i] = matching.NewOrder(uint64(i+depth*2), matching.MarketOrder, matching.Sell, 0.0, 5)
+			orders[i] = matching.NewOrder(uint64(i+depth*2), "user_test", matching.MarketOrder, matching.Sell, 0.0, 5)
 		}
 	}
 
@@ -288,8 +288,8 @@ func BenchmarkHighFrequencyTrading(b *testing.B) {
 
 	// Initialize book with liquidity
 	for i := 0; i < 50; i++ {
-		engine.PlaceOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, 99.0+float64(i)*0.01, 100))
-		engine.PlaceOrder(matching.NewOrder(uint64(i+50), matching.LimitOrder, matching.Sell, 101.0+float64(i)*0.01, 100))
+		engine.PlaceOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, 99.0+float64(i)*0.01, 100))
+		engine.PlaceOrder(matching.NewOrder(uint64(i+50), "user_test", matching.LimitOrder, matching.Sell, 101.0+float64(i)*0.01, 100))
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -304,7 +304,7 @@ func BenchmarkHighFrequencyTrading(b *testing.B) {
 			price = 101.0
 		}
 
-		orders[i] = matching.NewOrder(uint64(i+1000), orderType, side, price, 10)
+		orders[i] = matching.NewOrder(uint64(i+1000), "user_test", orderType, side, price, 10)
 	}
 
 	b.ReportAllocs()
@@ -326,8 +326,8 @@ func BenchmarkMixedOperations(b *testing.B) {
 
 	// Initialize with some liquidity
 	for i := 0; i < 20; i++ {
-		engine.PlaceOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, 99.0+float64(i)*0.01, 50))
-		engine.PlaceOrder(matching.NewOrder(uint64(i+20), matching.LimitOrder, matching.Sell, 101.0+float64(i)*0.01, 50))
+		engine.PlaceOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, 99.0+float64(i)*0.01, 50))
+		engine.PlaceOrder(matching.NewOrder(uint64(i+20), "user_test", matching.LimitOrder, matching.Sell, 101.0+float64(i)*0.01, 50))
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -343,7 +343,7 @@ func BenchmarkMixedOperations(b *testing.B) {
 				side = matching.Sell
 				price = 101.5
 			}
-			order := matching.NewOrder(uint64(i+1000), matching.LimitOrder, side, price, 10)
+			order := matching.NewOrder(uint64(i+1000), "user_test", matching.LimitOrder, side, price, 10)
 			operations[i] = func() { engine.PlaceOrder(order) }
 
 		case r < 0.7: // 30% market orders
@@ -351,7 +351,7 @@ func BenchmarkMixedOperations(b *testing.B) {
 			if rand.Float64() > 0.5 {
 				side = matching.Sell
 			}
-			order := matching.NewOrder(uint64(i+1000), matching.MarketOrder, side, 0.0, 10)
+			order := matching.NewOrder(uint64(i+1000), "user_test", matching.MarketOrder, side, 0.0, 10)
 			operations[i] = func() { engine.PlaceOrder(order) }
 
 		default: // 30% cancellations
@@ -379,7 +379,7 @@ func BenchmarkWorstCaseSearch(b *testing.B) {
 
 	// Add many orders at same price
 	for i := 0; i < 1000; i++ {
-		ob.AddBidOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, 100.0, 10))
+		ob.AddBidOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, 100.0, 10))
 	}
 
 	b.ReportAllocs()
@@ -401,7 +401,7 @@ func BenchmarkBestCaseSearch(b *testing.B) {
 	// Add many orders at different prices
 	for i := 0; i < 1000; i++ {
 		price := 100.0 + float64(i)*0.01
-		ob.AddBidOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, price, 10))
+		ob.AddBidOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, price, 10))
 	}
 
 	b.ReportAllocs()
@@ -425,10 +425,10 @@ func BenchmarkFullExecution(b *testing.B) {
 		engine := matching.NewEngine()
 
 		// Add liquidity
-		engine.PlaceOrder(matching.NewOrder(1, matching.LimitOrder, matching.Sell, 101.0, 100))
+		engine.PlaceOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Sell, 101.0, 100))
 
 		// Execute market order
-		engine.PlaceOrder(matching.NewOrder(2, matching.MarketOrder, matching.Buy, 0.0, 50))
+		engine.PlaceOrder(matching.NewOrder(2, "user_test", matching.MarketOrder, matching.Buy, 0.0, 50))
 
 		// Cancel remaining
 		engine.CancelOrder(1)
@@ -445,12 +445,12 @@ func BenchmarkLargeOrderPartialFill(b *testing.B) {
 	// Add many small orders
 	for i := 0; i < 100; i++ {
 		price := 101.0 + float64(i)*0.01
-		engine.PlaceOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Sell, price, 10))
+		engine.PlaceOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Sell, price, 10))
 	}
 
 	orders := make([]*matching.Order, b.N)
 	for i := 0; i < b.N; i++ {
-		orders[i] = matching.NewOrder(uint64(i+1000), matching.MarketOrder, matching.Buy, 0.0, 500)
+		orders[i] = matching.NewOrder(uint64(i+1000), "user_test", matching.MarketOrder, matching.Buy, 0.0, 500)
 	}
 
 	b.ReportAllocs()
@@ -461,7 +461,7 @@ func BenchmarkLargeOrderPartialFill(b *testing.B) {
 		// Replenish liquidity
 		for j := 0; j < 100; j++ {
 			price := 101.0 + float64(j)*0.01
-			engine.PlaceOrder(matching.NewOrder(uint64(i*100+j+10000), matching.LimitOrder, matching.Sell, price, 10))
+			engine.PlaceOrder(matching.NewOrder(uint64(i*100+j+10000), "user_test", matching.LimitOrder, matching.Sell, price, 10))
 		}
 	}
 
@@ -475,12 +475,12 @@ func BenchmarkPriceTimePriority(b *testing.B) {
 
 	// Add many orders at same price
 	for i := 0; i < 100; i++ {
-		engine.PlaceOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Sell, 101.0, 10))
+		engine.PlaceOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Sell, 101.0, 10))
 	}
 
 	orders := make([]*matching.Order, b.N)
 	for i := 0; i < b.N; i++ {
-		orders[i] = matching.NewOrder(uint64(i+1000), matching.MarketOrder, matching.Buy, 0.0, 10)
+		orders[i] = matching.NewOrder(uint64(i+1000), "user_test", matching.MarketOrder, matching.Buy, 0.0, 10)
 	}
 
 	b.ReportAllocs()
@@ -489,7 +489,7 @@ func BenchmarkPriceTimePriority(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		engine.PlaceOrder(orders[i])
 		// Add replacement order
-		engine.PlaceOrder(matching.NewOrder(uint64(i+10000), matching.LimitOrder, matching.Sell, 101.0, 10))
+		engine.PlaceOrder(matching.NewOrder(uint64(i+10000), "user_test", matching.LimitOrder, matching.Sell, 101.0, 10))
 	}
 
 	ordersPerSec := float64(b.N) / b.Elapsed().Seconds()
@@ -507,8 +507,8 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		for j := 0; j < 1000; j++ {
 			bidPrice := 100.0 - float64(j)*0.01
 			askPrice := 101.0 + float64(j)*0.01
-			engine.PlaceOrder(matching.NewOrder(uint64(j*2), matching.LimitOrder, matching.Buy, bidPrice, 100))
-			engine.PlaceOrder(matching.NewOrder(uint64(j*2+1), matching.LimitOrder, matching.Sell, askPrice, 100))
+			engine.PlaceOrder(matching.NewOrder(uint64(j*2), "user_test", matching.LimitOrder, matching.Buy, bidPrice, 100))
+			engine.PlaceOrder(matching.NewOrder(uint64(j*2+1), "user_test", matching.LimitOrder, matching.Sell, askPrice, 100))
 		}
 	}
 
@@ -521,17 +521,17 @@ func BenchmarkThroughputStressTest(b *testing.B) {
 
 	// Pre-populate with deep liquidity
 	for i := 0; i < 500; i++ {
-		engine.PlaceOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, 95.0+float64(i)*0.01, 1000))
-		engine.PlaceOrder(matching.NewOrder(uint64(i+500), matching.LimitOrder, matching.Sell, 105.0+float64(i)*0.01, 1000))
+		engine.PlaceOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, 95.0+float64(i)*0.01, 1000))
+		engine.PlaceOrder(matching.NewOrder(uint64(i+500), "user_test", matching.LimitOrder, matching.Sell, 105.0+float64(i)*0.01, 1000))
 	}
 
 	rand.Seed(time.Now().UnixNano())
 	orders := make([]*matching.Order, b.N)
 	for i := 0; i < b.N; i++ {
 		if rand.Float64() > 0.5 {
-			orders[i] = matching.NewOrder(uint64(i+10000), matching.LimitOrder, matching.Buy, 100.0, 10)
+			orders[i] = matching.NewOrder(uint64(i+10000), "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
 		} else {
-			orders[i] = matching.NewOrder(uint64(i+10000), matching.LimitOrder, matching.Sell, 101.0, 10)
+			orders[i] = matching.NewOrder(uint64(i+10000), "user_test", matching.LimitOrder, matching.Sell, 101.0, 10)
 		}
 	}
 

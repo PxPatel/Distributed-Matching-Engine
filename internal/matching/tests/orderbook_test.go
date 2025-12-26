@@ -35,10 +35,10 @@ func TestAddBidOrder(t *testing.T) {
 		name  string
 		order *matching.Order
 	}{
-		{"SingleBid", matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10)},
-		{"HigherBid", matching.NewOrder(2, matching.LimitOrder, matching.Buy, 101.0, 20)},
-		{"LowerBid", matching.NewOrder(3, matching.LimitOrder, matching.Buy, 99.0, 15)},
-		{"SamePriceBid", matching.NewOrder(4, matching.LimitOrder, matching.Buy, 100.0, 5)},
+		{"SingleBid", matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)},
+		{"HigherBid", matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Buy, 101.0, 20)},
+		{"LowerBid", matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Buy, 99.0, 15)},
+		{"SamePriceBid", matching.NewOrder(4, "user_test", matching.LimitOrder, matching.Buy, 100.0, 5)},
 	}
 
 	for _, tt := range tests {
@@ -68,10 +68,10 @@ func TestAddAskOrder(t *testing.T) {
 		name  string
 		order *matching.Order
 	}{
-		{"SingleAsk", matching.NewOrder(10, matching.LimitOrder, matching.Sell, 102.0, 10)},
-		{"LowerAsk", matching.NewOrder(11, matching.LimitOrder, matching.Sell, 101.0, 20)},
-		{"HigherAsk", matching.NewOrder(12, matching.LimitOrder, matching.Sell, 103.0, 15)},
-		{"SamePriceAsk", matching.NewOrder(13, matching.LimitOrder, matching.Sell, 102.0, 5)},
+		{"SingleAsk", matching.NewOrder(10, "user_test", matching.LimitOrder, matching.Sell, 102.0, 10)},
+		{"LowerAsk", matching.NewOrder(11, "user_test", matching.LimitOrder, matching.Sell, 101.0, 20)},
+		{"HigherAsk", matching.NewOrder(12, "user_test", matching.LimitOrder, matching.Sell, 103.0, 15)},
+		{"SamePriceAsk", matching.NewOrder(13, "user_test", matching.LimitOrder, matching.Sell, 102.0, 5)},
 	}
 
 	for _, tt := range tests {
@@ -104,10 +104,10 @@ func TestGetBestBid(t *testing.T) {
 	}
 
 	// Add bids at different prices
-	ob.AddBidOrder(matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10))
-	ob.AddBidOrder(matching.NewOrder(2, matching.LimitOrder, matching.Buy, 101.0, 20))
-	ob.AddBidOrder(matching.NewOrder(3, matching.LimitOrder, matching.Buy, 99.0, 15))
-	ob.AddBidOrder(matching.NewOrder(4, matching.LimitOrder, matching.Buy, 101.0, 5)) // Same as highest
+	ob.AddBidOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10))
+	ob.AddBidOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Buy, 101.0, 20))
+	ob.AddBidOrder(matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Buy, 99.0, 15))
+	ob.AddBidOrder(matching.NewOrder(4, "user_test", matching.LimitOrder, matching.Buy, 101.0, 5)) // Same as highest
 
 	// Best bid should be 101.0
 	price, orders = ob.GetBestBid()
@@ -130,10 +130,10 @@ func TestGetBestAsk(t *testing.T) {
 	}
 
 	// Add asks at different prices
-	ob.AddAskOrder(matching.NewOrder(10, matching.LimitOrder, matching.Sell, 102.0, 10))
-	ob.AddAskOrder(matching.NewOrder(11, matching.LimitOrder, matching.Sell, 101.0, 20))
-	ob.AddAskOrder(matching.NewOrder(12, matching.LimitOrder, matching.Sell, 103.0, 15))
-	ob.AddAskOrder(matching.NewOrder(13, matching.LimitOrder, matching.Sell, 101.0, 5)) // Same as lowest
+	ob.AddAskOrder(matching.NewOrder(10, "user_test", matching.LimitOrder, matching.Sell, 102.0, 10))
+	ob.AddAskOrder(matching.NewOrder(11, "user_test", matching.LimitOrder, matching.Sell, 101.0, 20))
+	ob.AddAskOrder(matching.NewOrder(12, "user_test", matching.LimitOrder, matching.Sell, 103.0, 15))
+	ob.AddAskOrder(matching.NewOrder(13, "user_test", matching.LimitOrder, matching.Sell, 101.0, 5)) // Same as lowest
 
 	// Best ask should be 101.0
 	price, orders = ob.GetBestAsk()
@@ -156,10 +156,10 @@ func TestSearchById(t *testing.T) {
 	}
 
 	// Add some orders
-	bid1 := matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10)
-	bid2 := matching.NewOrder(2, matching.LimitOrder, matching.Buy, 101.0, 20)
-	ask1 := matching.NewOrder(10, matching.LimitOrder, matching.Sell, 102.0, 10)
-	ask2 := matching.NewOrder(11, matching.LimitOrder, matching.Sell, 103.0, 15)
+	bid1 := matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
+	bid2 := matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Buy, 101.0, 20)
+	ask1 := matching.NewOrder(10, "user_test", matching.LimitOrder, matching.Sell, 102.0, 10)
+	ask2 := matching.NewOrder(11, "user_test", matching.LimitOrder, matching.Sell, 103.0, 15)
 
 	ob.AddBidOrder(bid1)
 	ob.AddBidOrder(bid2)
@@ -207,9 +207,9 @@ func TestGetOrdersByPrice(t *testing.T) {
 	}
 
 	// Add orders at price 100.0
-	ob.AddBidOrder(matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10))
-	ob.AddBidOrder(matching.NewOrder(2, matching.LimitOrder, matching.Buy, 100.0, 20))
-	ob.AddAskOrder(matching.NewOrder(10, matching.LimitOrder, matching.Sell, 100.0, 15))
+	ob.AddBidOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10))
+	ob.AddBidOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Buy, 100.0, 20))
+	ob.AddAskOrder(matching.NewOrder(10, "user_test", matching.LimitOrder, matching.Sell, 100.0, 15))
 
 	// Test retrieving orders at 100.0
 	plo = ob.GetOrdersByPrice(100.0)
@@ -238,9 +238,9 @@ func TestDeleteBidOrder(t *testing.T) {
 	}
 
 	// Add orders
-	ob.AddBidOrder(matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10))
-	ob.AddBidOrder(matching.NewOrder(2, matching.LimitOrder, matching.Buy, 100.0, 20))
-	ob.AddBidOrder(matching.NewOrder(3, matching.LimitOrder, matching.Buy, 101.0, 15))
+	ob.AddBidOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10))
+	ob.AddBidOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Buy, 100.0, 20))
+	ob.AddBidOrder(matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Buy, 101.0, 15))
 
 	// Delete order 1
 	success = ob.DeleteBidOrder(1)
@@ -279,9 +279,9 @@ func TestDeleteAskOrder(t *testing.T) {
 	}
 
 	// Add orders
-	ob.AddAskOrder(matching.NewOrder(10, matching.LimitOrder, matching.Sell, 102.0, 10))
-	ob.AddAskOrder(matching.NewOrder(11, matching.LimitOrder, matching.Sell, 102.0, 20))
-	ob.AddAskOrder(matching.NewOrder(12, matching.LimitOrder, matching.Sell, 103.0, 15))
+	ob.AddAskOrder(matching.NewOrder(10, "user_test", matching.LimitOrder, matching.Sell, 102.0, 10))
+	ob.AddAskOrder(matching.NewOrder(11, "user_test", matching.LimitOrder, matching.Sell, 102.0, 20))
+	ob.AddAskOrder(matching.NewOrder(12, "user_test", matching.LimitOrder, matching.Sell, 103.0, 15))
 
 	// Delete order 10
 	success = ob.DeleteAskOrder(10)
@@ -314,8 +314,8 @@ func TestDeleteOrderById(t *testing.T) {
 	ob := matching.NewOrderBook()
 
 	// Add both bid and ask orders
-	ob.AddBidOrder(matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10))
-	ob.AddAskOrder(matching.NewOrder(10, matching.LimitOrder, matching.Sell, 102.0, 10))
+	ob.AddBidOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10))
+	ob.AddAskOrder(matching.NewOrder(10, "user_test", matching.LimitOrder, matching.Sell, 102.0, 10))
 
 	// Delete bid order
 	success := ob.DeleteOrderById(1)
@@ -353,9 +353,9 @@ func TestDeleteBidBlock(t *testing.T) {
 	}
 
 	// Add multiple orders at same price
-	ob.AddBidOrder(matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10))
-	ob.AddBidOrder(matching.NewOrder(2, matching.LimitOrder, matching.Buy, 100.0, 20))
-	ob.AddBidOrder(matching.NewOrder(3, matching.LimitOrder, matching.Buy, 100.0, 15))
+	ob.AddBidOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10))
+	ob.AddBidOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Buy, 100.0, 20))
+	ob.AddBidOrder(matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Buy, 100.0, 15))
 
 	// Delete entire block
 	success = ob.DeleteBidBlock(100.0)
@@ -386,9 +386,9 @@ func TestDeleteAskBlock(t *testing.T) {
 	}
 
 	// Add multiple orders at same price
-	ob.AddAskOrder(matching.NewOrder(10, matching.LimitOrder, matching.Sell, 102.0, 10))
-	ob.AddAskOrder(matching.NewOrder(11, matching.LimitOrder, matching.Sell, 102.0, 20))
-	ob.AddAskOrder(matching.NewOrder(12, matching.LimitOrder, matching.Sell, 102.0, 15))
+	ob.AddAskOrder(matching.NewOrder(10, "user_test", matching.LimitOrder, matching.Sell, 102.0, 10))
+	ob.AddAskOrder(matching.NewOrder(11, "user_test", matching.LimitOrder, matching.Sell, 102.0, 20))
+	ob.AddAskOrder(matching.NewOrder(12, "user_test", matching.LimitOrder, matching.Sell, 102.0, 15))
 
 	// Delete entire block
 	success = ob.DeleteAskBlock(102.0)
@@ -413,9 +413,9 @@ func TestPriceTimePriority(t *testing.T) {
 	ob := matching.NewOrderBook()
 
 	// Add orders at same price in sequence
-	order1 := matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10)
-	order2 := matching.NewOrder(2, matching.LimitOrder, matching.Buy, 100.0, 20)
-	order3 := matching.NewOrder(3, matching.LimitOrder, matching.Buy, 100.0, 15)
+	order1 := matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
+	order2 := matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Buy, 100.0, 20)
+	order3 := matching.NewOrder(3, "user_test", matching.LimitOrder, matching.Buy, 100.0, 15)
 
 	ob.AddBidOrder(order1)
 	ob.AddBidOrder(order2)
@@ -442,13 +442,13 @@ func TestLargeOrderBook(t *testing.T) {
 	// Add 1000 bid orders at different prices
 	for i := 0; i < 1000; i++ {
 		price := 100.0 + float64(i)*0.01
-		ob.AddBidOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, price, 10))
+		ob.AddBidOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, price, 10))
 	}
 
 	// Add 1000 ask orders at different prices
 	for i := 1000; i < 2000; i++ {
 		price := 110.0 + float64(i-1000)*0.01
-		ob.AddAskOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Sell, price, 10))
+		ob.AddAskOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Sell, price, 10))
 	}
 
 	// Test best bid (should be highest)
@@ -489,7 +489,7 @@ func TestMultipleOrdersAtSamePrice(t *testing.T) {
 
 	// Add 10 orders at same price
 	for i := 0; i < 10; i++ {
-		ob.AddBidOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, 100.0, 10))
+		ob.AddBidOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, 100.0, 10))
 	}
 
 	plo := ob.GetOrdersByPrice(100.0)
@@ -521,7 +521,7 @@ func TestEdgeCasePrices(t *testing.T) {
 	ob := matching.NewOrderBook()
 
 	// Test very small price
-	ob.AddBidOrder(matching.NewOrder(1, matching.LimitOrder, matching.Buy, 0.0001, 10))
+	ob.AddBidOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 0.0001, 10))
 	found := ob.SearchById(1)
 	if found == nil || found.Price != 0.0001 {
 		t.Error("Should handle very small prices")
@@ -529,7 +529,7 @@ func TestEdgeCasePrices(t *testing.T) {
 
 	// Test very large price
 	largePrice := 999999999.99
-	ob.AddAskOrder(matching.NewOrder(2, matching.LimitOrder, matching.Sell, largePrice, 10))
+	ob.AddAskOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Sell, largePrice, 10))
 	found = ob.SearchById(2)
 	if found == nil || found.Price != largePrice {
 		t.Error("Should handle very large prices")
@@ -541,8 +541,8 @@ func TestCrossedBook(t *testing.T) {
 	ob := matching.NewOrderBook()
 
 	// Create crossed book (this is allowed at orderbook level, engine should handle)
-	ob.AddBidOrder(matching.NewOrder(1, matching.LimitOrder, matching.Buy, 102.0, 10))
-	ob.AddAskOrder(matching.NewOrder(2, matching.LimitOrder, matching.Sell, 100.0, 10))
+	ob.AddBidOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 102.0, 10))
+	ob.AddAskOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Sell, 100.0, 10))
 
 	bidPrice, _ := ob.GetBestBid()
 	askPrice, _ := ob.GetBestAsk()
@@ -607,8 +607,8 @@ func TestDuplicateOrderIDs(t *testing.T) {
 	ob := matching.NewOrderBook()
 
 	// Add two orders with same ID at different prices
-	order1 := matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10)
-	order2 := matching.NewOrder(1, matching.LimitOrder, matching.Buy, 101.0, 20)
+	order1 := matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
+	order2 := matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 101.0, 20)
 
 	ob.AddBidOrder(order1)
 	ob.AddBidOrder(order2)
@@ -632,7 +632,7 @@ func TestDuplicateOrderIDs(t *testing.T) {
 func TestModifyOrderInBook(t *testing.T) {
 	ob := matching.NewOrderBook()
 
-	order := matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10)
+	order := matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10)
 	ob.AddBidOrder(order)
 
 	// Modify the order directly
@@ -655,7 +655,7 @@ func TestConcurrentAccess(t *testing.T) {
 
 	// Add initial orders
 	for i := 0; i < 100; i++ {
-		ob.AddBidOrder(matching.NewOrder(uint64(i), matching.LimitOrder, matching.Buy, 100.0, 10))
+		ob.AddBidOrder(matching.NewOrder(uint64(i), "user_test", matching.LimitOrder, matching.Buy, 100.0, 10))
 	}
 
 	// Note: This is a basic test. For production, proper synchronization would be needed
@@ -680,8 +680,8 @@ func TestSpreadCalculation(t *testing.T) {
 	ob := matching.NewOrderBook()
 
 	// Add orders
-	ob.AddBidOrder(matching.NewOrder(1, matching.LimitOrder, matching.Buy, 100.0, 10))
-	ob.AddAskOrder(matching.NewOrder(2, matching.LimitOrder, matching.Sell, 101.0, 10))
+	ob.AddBidOrder(matching.NewOrder(1, "user_test", matching.LimitOrder, matching.Buy, 100.0, 10))
+	ob.AddAskOrder(matching.NewOrder(2, "user_test", matching.LimitOrder, matching.Sell, 101.0, 10))
 
 	bidPrice, _ := ob.GetBestBid()
 	askPrice, _ := ob.GetBestAsk()
