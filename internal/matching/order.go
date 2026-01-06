@@ -1,66 +1,27 @@
 package matching
 
-import "time"
+import "github.com/PxPatel/trading-system/internal/types"
 
-type OrderType int
-
-const (
-	NoActionOrder OrderType = iota
-	MarketOrder
-	LimitOrder
-	CancelOrder
-	StopMarketOrder
-	StopLimitOrder
+// Re-export types for backward compatibility
+type (
+	OrderType = types.OrderType
+	SideType  = types.SideType
+	Order     = types.Order
 )
 
-type SideType int
-
+// Re-export constants
 const (
-	NoActionSide SideType = iota
-	Buy
-	Sell
+	NoActionOrder   = types.NoActionOrder
+	MarketOrder     = types.MarketOrder
+	LimitOrder      = types.LimitOrder
+	CancelOrder     = types.CancelOrder
+	StopMarketOrder = types.StopMarketOrder
+	StopLimitOrder  = types.StopLimitOrder
+
+	NoActionSide = types.NoActionSide
+	Buy          = types.Buy
+	Sell         = types.Sell
 )
 
-type Order struct {
-	ID        uint64
-	UserID    string
-	Symbol    string
-	OrderType OrderType
-	Side      SideType
-	Price     float64
-	StopPrice float64
-	Size      int
-	TimeStamp time.Time
-}
-
-func (o *Order) IsValid() bool {
-	if o.OrderType == NoActionOrder || o.Side == NoActionSide {
-		return false
-	}
-	if o.Size <= 0 {
-		return false
-	}
-	if o.OrderType == LimitOrder && o.Price <= 0 {
-		return false
-	}
-	return true
-}
-
-func NewOrder(id uint64, userId string, orderType OrderType, side SideType, price float64, quantity int) *Order {
-	return &Order{
-		ID:        id,
-		UserID:    userId,
-		Symbol:    "COOTX",
-		OrderType: orderType,
-		Side:      side,
-		Price:     price,
-		Size:      quantity,
-		TimeStamp: time.Now(),
-	}
-}
-
-func (o *Order) SetSize(size int) {
-	if size >= 0 {
-		o.Size = size
-	}
-}
+// Re-export constructor
+var NewOrder = types.NewOrder

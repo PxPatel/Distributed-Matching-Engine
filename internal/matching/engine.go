@@ -1,66 +1,20 @@
 package matching
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
 	"slices"
-	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/PxPatel/trading-system/internal/storage"
 )
 
 type Engine struct {
 	orderBook      *OrderBook
 	incomingOrders chan *Order
 	trades         chan *Trade
-	orderTracker   map[uint64]*Order // Track all orders for O(1) lookup
-	trackerMutex   sync.RWMutex      // Protect order tracker
-	tradeHistory   []*Trade          // Recent trades in memory
-	historyMutex   sync.RWMutex      // Protect trade history
-	maxHistory     int               // Max trades to keep in memory
-	nextOrderID    uint64            // Atomic counter for order IDs
-	tradePersister *TradePersister   // Handles trade persistence to disk
-}
-
-type Trade struct {
-	BuyOrderID  uint64
-	SellOrderID uint64
-	Price       float64
-	Size        int
-	Timestamp   time.Time
-}
-
-// TradePersister handles writing trades to disk
-type TradePersister struct {
-	file   *os.File
-	mutex  sync.Mutex
-	logger *json.Encoder
-}
-
-// NewTradePersister creates a new trade persister
-func NewTradePersister(filePath string) (*TradePersister, error) {
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open trade log: %w", err)
-	}
-
-	return &TradePersister{
-		file:   file,
-		logger: json.NewEncoder(file),
-	}, nil
-}
-
-// WriteTrade writes a trade to disk
-func (tp *TradePersister) WriteTrade(trade *Trade) error {
-	tp.mutex.Lock()
-	defer tp.mutex.Unlock()
-	return tp.logger.Encode(trade)
-}
-
-// Close closes the trade persister
-func (tp *TradePersister) Close() error {
-	return tp.file.Close()
+	nextOrderID    uint64 // Atomic counter for order IDs
+	orderStore     storage.OrderStore
+	tradeStore     storage.TradeStore
 }
 
 // EngineConfig holds configuration for the engine
@@ -69,6 +23,7 @@ type EngineConfig struct {
 	TradeLogPath     string
 }
 
+// NewEngine creates a new engine with default configuration and in-memory+file storage
 func NewEngine() *Engine {
 	return NewEngineWithConfig(&EngineConfig{
 		TradeHistorySize: 1000,
@@ -76,23 +31,38 @@ func NewEngine() *Engine {
 	})
 }
 
-// NewEngineWithConfig creates a new engine with custom configuration
+// NewEngineWithConfig creates a new engine with custom configuration.
+// Uses composite storage: in-memory (fast reads) + file (durable writes).
 func NewEngineWithConfig(cfg *EngineConfig) *Engine {
-	persister, err := NewTradePersister(cfg.TradeLogPath)
+	// Default storage: memory + file composite
+	orderStore := storage.NewInMemoryOrderStore()
+
+	// Create trade store with fallback if file can't be opened
+	memoryTradeStore := storage.NewInMemoryTradeStore(cfg.TradeHistorySize)
+	fileTradeStore, err := storage.NewFileTradeStore(cfg.TradeLogPath)
+
+	var tradeStore storage.TradeStore
 	if err != nil {
-		// Fallback to no persistence if file can't be opened
-		persister = nil
+		// Fallback to memory-only if file can't be opened
+		tradeStore = memoryTradeStore
+	} else {
+		// Composite: writes to both memory and file
+		tradeStore = storage.NewCompositeTradeStore(memoryTradeStore, fileTradeStore)
 	}
 
+	return NewEngineWithStores(orderStore, tradeStore)
+}
+
+// NewEngineWithStores creates a new engine with custom storage implementations.
+// This constructor allows full control over storage backends (e.g., Redis, PostgreSQL).
+func NewEngineWithStores(orderStore storage.OrderStore, tradeStore storage.TradeStore) *Engine {
 	return &Engine{
 		orderBook:      NewOrderBook(),
 		incomingOrders: make(chan *Order),
 		trades:         make(chan *Trade),
-		orderTracker:   make(map[uint64]*Order),
-		tradeHistory:   make([]*Trade, 0, cfg.TradeHistorySize),
-		maxHistory:     cfg.TradeHistorySize,
 		nextOrderID:    1,
-		tradePersister: persister,
+		orderStore:     orderStore,
+		tradeStore:     tradeStore,
 	}
 }
 
@@ -101,108 +71,56 @@ func (e *Engine) GenerateOrderID() uint64 {
 	return atomic.AddUint64(&e.nextOrderID, 1)
 }
 
-// TrackOrder adds an order to the tracker
+// TrackOrder adds an order to the store
 func (e *Engine) TrackOrder(order *Order) {
-	e.trackerMutex.Lock()
-	defer e.trackerMutex.Unlock()
-	e.orderTracker[order.ID] = order
+	_ = e.orderStore.Save(order)
 }
 
-// UntrackOrder removes an order from the tracker
+// UntrackOrder removes an order from the store
 func (e *Engine) UntrackOrder(orderID uint64) {
-	e.trackerMutex.Lock()
-	defer e.trackerMutex.Unlock()
-	delete(e.orderTracker, orderID)
+	_ = e.orderStore.Remove(orderID)
 }
 
 // GetOrder retrieves an order by ID
 func (e *Engine) GetOrder(orderID uint64) *Order {
-	e.trackerMutex.RLock()
-	defer e.trackerMutex.RUnlock()
-	return e.orderTracker[orderID]
+	order, _ := e.orderStore.Get(orderID)
+	return order
 }
 
 // GetAllOrders returns all tracked orders
 func (e *Engine) GetAllOrders() []*Order {
-	e.trackerMutex.RLock()
-	defer e.trackerMutex.RUnlock()
-
-	orders := make([]*Order, 0, len(e.orderTracker))
-	for _, order := range e.orderTracker {
-		orders = append(orders, order)
-	}
-	return orders
+	return e.orderStore.GetAll()
 }
 
 // GetOrdersByUser returns all orders for a specific user
 func (e *Engine) GetOrdersByUser(userID string) []*Order {
-	e.trackerMutex.RLock()
-	defer e.trackerMutex.RUnlock()
-
-	orders := make([]*Order, 0)
-	for _, order := range e.orderTracker {
-		if order.UserID == userID {
-			orders = append(orders, order)
-		}
-	}
-	return orders
+	return e.orderStore.GetByUser(userID)
 }
 
 // GetOrdersBySide returns all orders for a specific side
 func (e *Engine) GetOrdersBySide(side SideType) []*Order {
-	e.trackerMutex.RLock()
-	defer e.trackerMutex.RUnlock()
-
-	orders := make([]*Order, 0)
-	for _, order := range e.orderTracker {
-		if order.Side == side {
-			orders = append(orders, order)
-		}
-	}
-	return orders
+	return e.orderStore.GetBySide(side)
 }
 
-// AddTradeToHistory adds a trade to the in-memory history
+// AddTradeToHistory saves a trade to the store
 func (e *Engine) AddTradeToHistory(trade *Trade) {
-	e.historyMutex.Lock()
-	defer e.historyMutex.Unlock()
-
-	e.tradeHistory = append(e.tradeHistory, trade)
-
-	// Keep only the most recent trades
-	if len(e.tradeHistory) > e.maxHistory {
-		e.tradeHistory = e.tradeHistory[len(e.tradeHistory)-e.maxHistory:]
-	}
-
-	// Persist to disk
-	if e.tradePersister != nil {
-		go e.tradePersister.WriteTrade(trade)
-	}
+	_ = e.tradeStore.Save(trade)
 }
 
-// GetRecentTrades returns recent trades from memory
+// GetRecentTrades returns recent trades from the store
 func (e *Engine) GetRecentTrades(limit int) []*Trade {
-	e.historyMutex.RLock()
-	defer e.historyMutex.RUnlock()
-
-	if limit <= 0 || limit > len(e.tradeHistory) {
-		limit = len(e.tradeHistory)
-	}
-
-	start := len(e.tradeHistory) - limit
-	trades := make([]*Trade, limit)
-	copy(trades, e.tradeHistory[start:])
+	trades, _ := e.tradeStore.GetRecent(limit)
+	// Reverse for newest-first ordering (API convention)
 	slices.Reverse(trades)
-
 	return trades
 }
 
-// Close cleanly shuts down the engine
+// Close cleanly shuts down the engine and releases resources
 func (e *Engine) Close() error {
-	if e.tradePersister != nil {
-		return e.tradePersister.Close()
+	if err := e.orderStore.Close(); err != nil {
+		return err
 	}
-	return nil
+	return e.tradeStore.Close()
 }
 
 // GetOrderBook returns the order book
