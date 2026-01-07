@@ -1,4 +1,4 @@
-package storage
+package postgres
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/PxPatel/trading-system/internal/storage/migrations"
 	"github.com/PxPatel/trading-system/internal/types"
 )
 
@@ -28,7 +27,7 @@ func NewPostgresOrderStore(cfg PostgresConfig) (*PostgresOrderStore, error) {
 	}
 
 	// Run migrations
-	if err := migrations.RunMigrations(ctx, pool); err != nil {
+	if err := RunMigrations(ctx, pool); err != nil {
 		pool.Close()
 		return nil, fmt.Errorf("migration failed: %w", err)
 	}

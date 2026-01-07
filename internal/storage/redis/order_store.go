@@ -1,4 +1,4 @@
-package storage
+package redis
 
 import (
 	"context"
@@ -15,12 +15,14 @@ const (
 	orderKeyPrefix     = "order:"
 	userOrdersPrefix   = "user_orders:"
 	sideOrdersPrefix   = "side_orders:"
-	orderTTL           = 24 * time.Hour // Orders expire after 24 hours
+	ordersTimelineKey  = "orders:timeline" // Sorted set for FIFO trimming
 )
 
-// RedisOrderStore implements OrderStore using Redis
+// RedisOrderStore implements OrderStore using Redis with FIFO eviction
 type RedisOrderStore struct {
-	client *redis.Client
+	client    *redis.Client
+	orderTTL  time.Duration
+	maxOrders int
 }
 
 // NewRedisOrderStore creates a new Redis-backed order store
@@ -30,7 +32,11 @@ func NewRedisOrderStore(cfg RedisConfig) (*RedisOrderStore, error) {
 		return nil, err
 	}
 
-	return &RedisOrderStore{client: client}, nil
+	return &RedisOrderStore{
+		client:    client,
+		orderTTL:  cfg.OrderTTL,
+		maxOrders: cfg.MaxOrders,
+	}, nil
 }
 
 func (s *RedisOrderStore) Save(order *types.Order) error {
@@ -47,17 +53,27 @@ func (s *RedisOrderStore) Save(order *types.Order) error {
 
 	// Store order hash
 	orderKey := fmt.Sprintf("%s%d", orderKeyPrefix, order.ID)
-	pipe.Set(ctx, orderKey, data, orderTTL)
+	pipe.Set(ctx, orderKey, data, s.orderTTL)
 
 	// Add to user index
 	userKey := fmt.Sprintf("%s%s", userOrdersPrefix, order.UserID)
 	pipe.SAdd(ctx, userKey, order.ID)
-	pipe.Expire(ctx, userKey, orderTTL)
+	pipe.Expire(ctx, userKey, s.orderTTL)
 
 	// Add to side index
 	sideKey := fmt.Sprintf("%s%d", sideOrdersPrefix, order.Side)
 	pipe.SAdd(ctx, sideKey, order.ID)
-	pipe.Expire(ctx, sideKey, orderTTL)
+	pipe.Expire(ctx, sideKey, s.orderTTL)
+
+	// Add to timeline sorted set for FIFO eviction (score = creation timestamp)
+	score := float64(order.TimeStamp.UnixNano())
+	pipe.ZAdd(ctx, ordersTimelineKey, redis.Z{
+		Score:  score,
+		Member: order.ID,
+	})
+
+	// Trim to keep only last N orders (FIFO eviction)
+	pipe.ZRemRangeByRank(ctx, ordersTimelineKey, 0, int64(-s.maxOrders-1))
 
 	_, err = pipe.Exec(ctx)
 	return err
@@ -107,6 +123,9 @@ func (s *RedisOrderStore) Remove(orderID uint64) error {
 	// Remove from side index
 	sideKey := fmt.Sprintf("%s%d", sideOrdersPrefix, order.Side)
 	pipe.SRem(ctx, sideKey, orderID)
+
+	// Remove from timeline sorted set
+	pipe.ZRem(ctx, ordersTimelineKey, orderID)
 
 	_, err = pipe.Exec(ctx)
 	return err

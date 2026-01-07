@@ -1,4 +1,4 @@
-package storage
+package redis
 
 import (
 	"context"
@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	tradesKey    = "trades:recent"
-	maxRedisTradeCount = 10000 // Keep last 10k trades in Redis
+	tradesKey = "trades:recent"
 )
 
-// RedisTradeStore implements TradeStore using Redis sorted sets
+// RedisTradeStore implements TradeStore using Redis sorted sets with FIFO eviction
 type RedisTradeStore struct {
-	client *redis.Client
+	client    *redis.Client
+	maxTrades int
 }
 
 // NewRedisTradeStore creates a new Redis-backed trade store
@@ -27,7 +27,10 @@ func NewRedisTradeStore(cfg RedisConfig) (*RedisTradeStore, error) {
 		return nil, err
 	}
 
-	return &RedisTradeStore{client: client}, nil
+	return &RedisTradeStore{
+		client:    client,
+		maxTrades: cfg.MaxTrades,
+	}, nil
 }
 
 func (s *RedisTradeStore) Save(trade *types.Trade) error {
@@ -50,7 +53,7 @@ func (s *RedisTradeStore) Save(trade *types.Trade) error {
 	})
 
 	// Trim to keep only last N trades
-	pipe.ZRemRangeByRank(ctx, tradesKey, 0, -maxRedisTradeCount-1)
+	pipe.ZRemRangeByRank(ctx, tradesKey, 0, int64(-s.maxTrades-1))
 
 	_, err = pipe.Exec(ctx)
 	return err
@@ -81,7 +84,7 @@ func (s *RedisTradeStore) SaveBatch(trades []*types.Trade) error {
 	}
 
 	// Trim to keep only last N trades
-	pipe.ZRemRangeByRank(ctx, tradesKey, 0, -maxRedisTradeCount-1)
+	pipe.ZRemRangeByRank(ctx, tradesKey, 0, int64(-s.maxTrades-1))
 
 	_, err := pipe.Exec(ctx)
 	return err

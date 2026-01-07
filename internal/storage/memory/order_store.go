@@ -1,4 +1,4 @@
-package storage
+package memory
 
 import (
 	"fmt"
@@ -7,23 +7,42 @@ import (
 	"github.com/PxPatel/trading-system/internal/types"
 )
 
-// InMemoryOrderStore implements OrderStore using an in-memory map.
+// InMemoryOrderStore implements OrderStore using an in-memory map with FIFO eviction.
 // Thread-safe for concurrent access via RWMutex.
+// When maxSize is reached, oldest orders are evicted to maintain size limit.
 type InMemoryOrderStore struct {
-	orders map[uint64]*types.Order
-	mutex  sync.RWMutex
+	orders    map[uint64]*types.Order
+	orderIDs  []uint64 // FIFO queue for eviction
+	maxSize   int
+	mutex     sync.RWMutex
 }
 
-// NewInMemoryOrderStore creates a new in-memory order store
-func NewInMemoryOrderStore() *InMemoryOrderStore {
+// NewInMemoryOrderStore creates a new in-memory order store with a size limit
+func NewInMemoryOrderStore(maxSize int) *InMemoryOrderStore {
 	return &InMemoryOrderStore{
-		orders: make(map[uint64]*types.Order),
+		orders:   make(map[uint64]*types.Order),
+		orderIDs: make([]uint64, 0, maxSize),
+		maxSize:  maxSize,
 	}
 }
 
 func (s *InMemoryOrderStore) Save(order *types.Order) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+
+	// Check if order already exists (update case)
+	if _, exists := s.orders[order.ID]; !exists {
+		// New order: add to FIFO queue
+		s.orderIDs = append(s.orderIDs, order.ID)
+
+		// Evict oldest order if size limit exceeded
+		if len(s.orderIDs) > s.maxSize {
+			oldestID := s.orderIDs[0]
+			delete(s.orders, oldestID)
+			s.orderIDs = s.orderIDs[1:]
+		}
+	}
+
 	s.orders[order.ID] = order
 	return nil
 }
@@ -42,7 +61,17 @@ func (s *InMemoryOrderStore) Get(orderID uint64) (*types.Order, error) {
 func (s *InMemoryOrderStore) Remove(orderID uint64) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+
 	delete(s.orders, orderID)
+
+	// Remove from FIFO queue
+	for i, id := range s.orderIDs {
+		if id == orderID {
+			s.orderIDs = append(s.orderIDs[:i], s.orderIDs[i+1:]...)
+			break
+		}
+	}
+
 	return nil
 }
 

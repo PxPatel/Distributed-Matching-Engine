@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/PxPatel/trading-system/internal/storage"
+	"github.com/PxPatel/trading-system/internal/storage/file"
+	"github.com/PxPatel/trading-system/internal/storage/memory"
 )
 
 type Engine struct {
@@ -19,14 +21,18 @@ type Engine struct {
 
 // EngineConfig holds configuration for the engine
 type EngineConfig struct {
-	TradeHistorySize int
+	MaxOrders        int
+	MaxTrades        int
+	TradeHistorySize int    // Deprecated: use MaxTrades
 	TradeLogPath     string
 }
 
 // NewEngine creates a new engine with default configuration and in-memory+file storage
 func NewEngine() *Engine {
 	return NewEngineWithConfig(&EngineConfig{
-		TradeHistorySize: 1000,
+		MaxOrders:        100000,
+		MaxTrades:        1000,
+		TradeHistorySize: 1000, // Deprecated
 		TradeLogPath:     "trades.log",
 	})
 }
@@ -35,11 +41,15 @@ func NewEngine() *Engine {
 // Uses composite storage: in-memory (fast reads) + file (durable writes).
 func NewEngineWithConfig(cfg *EngineConfig) *Engine {
 	// Default storage: memory + file composite
-	orderStore := storage.NewInMemoryOrderStore()
+	orderStore := memory.NewInMemoryOrderStore(cfg.MaxOrders)
 
 	// Create trade store with fallback if file can't be opened
-	memoryTradeStore := storage.NewInMemoryTradeStore(cfg.TradeHistorySize)
-	fileTradeStore, err := storage.NewFileTradeStore(cfg.TradeLogPath)
+	maxTrades := cfg.MaxTrades
+	if maxTrades == 0 && cfg.TradeHistorySize > 0 {
+		maxTrades = cfg.TradeHistorySize // Backward compatibility
+	}
+	memoryTradeStore := memory.NewInMemoryTradeStore(maxTrades)
+	fileTradeStore, err := file.NewFileTradeStore(cfg.TradeLogPath)
 
 	var tradeStore storage.TradeStore
 	if err != nil {

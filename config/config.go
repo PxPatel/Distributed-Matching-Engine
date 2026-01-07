@@ -15,6 +15,7 @@ type Config struct {
 	Engine   EngineConfig
 	API      APIConfig
 	Logger   LoggerConfig
+	Memory   MemoryConfig
 	Database DatabaseConfig
 	Redis    RedisConfig
 }
@@ -51,6 +52,13 @@ type LoggerConfig struct {
 	Level string // DEBUG, INFO, WARN, ERROR
 }
 
+// MemoryConfig holds in-memory storage configuration
+type MemoryConfig struct {
+	Enabled   bool
+	MaxOrders int
+	MaxTrades int
+}
+
 // DatabaseConfig holds PostgreSQL database configuration
 type DatabaseConfig struct {
 	Enabled         bool
@@ -75,6 +83,9 @@ type RedisConfig struct {
 	MaxRetries   int
 	PoolSize     int
 	MinIdleConns int
+	OrderTTL     time.Duration
+	MaxOrders    int
+	MaxTrades    int
 }
 
 var instance *Config
@@ -93,7 +104,7 @@ func Load() (*Config, error) {
 			ShutdownTimeout: getEnvDuration("SERVER_SHUTDOWN_TIMEOUT", 10*time.Second),
 		},
 		Engine: EngineConfig{
-			TradeHistorySize: getEnvInt("TRADE_HISTORY_SIZE", 1000),
+			TradeHistorySize: getEnvInt("MEMORY_MAX_TRADES", 1000), // Deprecated: use Memory.MaxTrades
 			TradeLogPath:     getEnv("TRADE_LOG_PATH", "trades.log"),
 			OrderCleanupEnabled: getEnvBool("ORDER_CLEANUP_ENABLED", false),
 			OrderCleanupInterval: getEnvDuration("ORDER_CLEANUP_INTERVAL", 5*time.Minute),
@@ -108,6 +119,11 @@ func Load() (*Config, error) {
 		},
 		Logger: LoggerConfig{
 			Level: getEnv("LOG_LEVEL", "INFO"),
+		},
+		Memory: MemoryConfig{
+			Enabled:   getEnvBool("MEMORY_ENABLED", true),
+			MaxOrders: getEnvInt("MEMORY_MAX_ORDERS", 100000),
+			MaxTrades: getEnvInt("MEMORY_MAX_TRADES", 1000),
 		},
 		Database: DatabaseConfig{
 			Enabled:         getEnvBool("DATABASE_ENABLED", false),
@@ -130,6 +146,9 @@ func Load() (*Config, error) {
 			MaxRetries:   getEnvInt("REDIS_MAX_RETRIES", 3),
 			PoolSize:     getEnvInt("REDIS_POOL_SIZE", 10),
 			MinIdleConns: getEnvInt("REDIS_MIN_IDLE_CONNS", 2),
+			OrderTTL:     getEnvDuration("REDIS_ORDER_TTL", 24*time.Hour),
+			MaxOrders:    getEnvInt("REDIS_MAX_ORDERS", 50000),
+			MaxTrades:    getEnvInt("REDIS_MAX_TRADES", 10000),
 		},
 	}
 

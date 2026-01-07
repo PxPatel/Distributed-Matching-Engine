@@ -14,6 +14,10 @@ import (
 	"github.com/PxPatel/trading-system/internal/api/routes"
 	"github.com/PxPatel/trading-system/internal/matching"
 	"github.com/PxPatel/trading-system/internal/storage"
+	"github.com/PxPatel/trading-system/internal/storage/file"
+	"github.com/PxPatel/trading-system/internal/storage/memory"
+	"github.com/PxPatel/trading-system/internal/storage/postgres"
+	"github.com/PxPatel/trading-system/internal/storage/redis"
 )
 
 func main() {
@@ -111,20 +115,26 @@ func main() {
 // buildStorageLayers constructs the storage layers based on configuration.
 // Returns composite stores that layer memory, Redis, and Postgres storage.
 func buildStorageLayers(cfg *config.Config) (storage.OrderStore, storage.TradeStore) {
-	// Always start with in-memory base layer (L1 cache)
-	memOrderStore := storage.NewInMemoryOrderStore()
-	memTradeStore := storage.NewInMemoryTradeStore(cfg.Engine.TradeHistorySize)
-
 	var orderStores []storage.OrderStore
 	var tradeStores []storage.TradeStore
 
-	// L1: In-memory (fastest)
-	orderStores = append(orderStores, memOrderStore)
-	tradeStores = append(tradeStores, memTradeStore)
+	// L1: In-memory (fastest) - if enabled
+	if cfg.Memory.Enabled {
+		memOrderStore := memory.NewInMemoryOrderStore(cfg.Memory.MaxOrders)
+		memTradeStore := memory.NewInMemoryTradeStore(cfg.Memory.MaxTrades)
+
+		orderStores = append(orderStores, memOrderStore)
+		tradeStores = append(tradeStores, memTradeStore)
+
+		logger.Info("In-memory storage layer enabled", map[string]interface{}{
+			"max_orders": cfg.Memory.MaxOrders,
+			"max_trades": cfg.Memory.MaxTrades,
+		})
+	}
 
 	// L2: Redis (distributed cache) - if enabled
 	if cfg.Redis.Enabled {
-		redisCfg := storage.RedisConfig{
+		redisCfg := redis.RedisConfig{
 			Host:         cfg.Redis.Host,
 			Port:         cfg.Redis.Port,
 			Password:     cfg.Redis.Password,
@@ -132,9 +142,12 @@ func buildStorageLayers(cfg *config.Config) (storage.OrderStore, storage.TradeSt
 			MaxRetries:   cfg.Redis.MaxRetries,
 			PoolSize:     cfg.Redis.PoolSize,
 			MinIdleConns: cfg.Redis.MinIdleConns,
+			OrderTTL:     cfg.Redis.OrderTTL,
+			MaxOrders:    cfg.Redis.MaxOrders,
+			MaxTrades:    cfg.Redis.MaxTrades,
 		}
 
-		redisOrderStore, err := storage.NewRedisOrderStore(redisCfg)
+		redisOrderStore, err := redis.NewRedisOrderStore(redisCfg)
 		if err != nil {
 			logger.Warn("Failed to connect to Redis, continuing without distributed cache", map[string]interface{}{
 				"error": err.Error(),
@@ -146,14 +159,14 @@ func buildStorageLayers(cfg *config.Config) (storage.OrderStore, storage.TradeSt
 			})
 			orderStores = append(orderStores, redisOrderStore)
 
-			redisTradeStore, _ := storage.NewRedisTradeStore(redisCfg)
+			redisTradeStore, _ := redis.NewRedisTradeStore(redisCfg)
 			tradeStores = append(tradeStores, redisTradeStore)
 		}
 	}
 
 	// L3: PostgreSQL (persistent storage) - if enabled
 	if cfg.Database.Enabled {
-		pgCfg := storage.PostgresConfig{
+		pgCfg := postgres.PostgresConfig{
 			Host:            cfg.Database.Host,
 			Port:            cfg.Database.Port,
 			Database:        cfg.Database.Name,
@@ -165,7 +178,7 @@ func buildStorageLayers(cfg *config.Config) (storage.OrderStore, storage.TradeSt
 			SSLMode:         cfg.Database.SSLMode,
 		}
 
-		pgOrderStore, err := storage.NewPostgresOrderStore(pgCfg)
+		pgOrderStore, err := postgres.NewPostgresOrderStore(pgCfg)
 		if err != nil {
 			logger.Warn("Failed to connect to PostgreSQL, continuing without persistent storage", map[string]interface{}{
 				"error": err.Error(),
@@ -177,13 +190,13 @@ func buildStorageLayers(cfg *config.Config) (storage.OrderStore, storage.TradeSt
 			})
 			orderStores = append(orderStores, pgOrderStore)
 
-			pgTradeStore, _ := storage.NewPostgresTradeStore(pgCfg)
+			pgTradeStore, _ := postgres.NewPostgresTradeStore(pgCfg)
 			tradeStores = append(tradeStores, pgTradeStore)
 		}
 	}
 
 	// L4: File storage (audit log) - always enabled
-	if fileTradeStore, err := storage.NewFileTradeStore(cfg.Engine.TradeLogPath); err == nil {
+	if fileTradeStore, err := file.NewFileTradeStore(cfg.Engine.TradeLogPath); err == nil {
 		tradeStores = append(tradeStores, fileTradeStore)
 		logger.Info("Trade file log enabled", map[string]interface{}{
 			"path": cfg.Engine.TradeLogPath,

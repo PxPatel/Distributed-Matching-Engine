@@ -1,4 +1,4 @@
-package storage
+package redis
 
 import (
 	"context"
@@ -17,6 +17,9 @@ type RedisConfig struct {
 	MaxRetries   int
 	PoolSize     int
 	MinIdleConns int
+	OrderTTL     time.Duration
+	MaxOrders    int
+	MaxTrades    int
 }
 
 // NewRedisClient creates a new Redis client with connection pooling
