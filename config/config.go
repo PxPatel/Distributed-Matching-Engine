@@ -83,6 +83,7 @@ type RedisConfig struct {
 	MaxRetries   int
 	PoolSize     int
 	MinIdleConns int
+	TLSEnabled   bool
 	OrderTTL     time.Duration
 	MaxOrders    int
 	MaxTrades    int
@@ -146,6 +147,7 @@ func Load() (*Config, error) {
 			MaxRetries:   getEnvInt("REDIS_MAX_RETRIES", 3),
 			PoolSize:     getEnvInt("REDIS_POOL_SIZE", 10),
 			MinIdleConns: getEnvInt("REDIS_MIN_IDLE_CONNS", 2),
+			TLSEnabled:   getEnvBool("REDIS_TLS_ENABLED", false),
 			OrderTTL:     getEnvDuration("REDIS_ORDER_TTL", 24*time.Hour),
 			MaxOrders:    getEnvInt("REDIS_MAX_ORDERS", 50000),
 			MaxTrades:    getEnvInt("REDIS_MAX_TRADES", 10000),

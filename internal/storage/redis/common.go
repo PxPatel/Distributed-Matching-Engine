@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"time"
 
@@ -17,6 +18,7 @@ type RedisConfig struct {
 	MaxRetries   int
 	PoolSize     int
 	MinIdleConns int
+	TLSEnabled   bool
 	OrderTTL     time.Duration
 	MaxOrders    int
 	MaxTrades    int
@@ -24,7 +26,7 @@ type RedisConfig struct {
 
 // NewRedisClient creates a new Redis client with connection pooling
 func NewRedisClient(cfg RedisConfig) (*redis.Client, error) {
-	client := redis.NewClient(&redis.Options{
+	opts := &redis.Options{
 		Addr:         fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 		Password:     cfg.Password,
 		DB:           cfg.DB,
@@ -34,7 +36,16 @@ func NewRedisClient(cfg RedisConfig) (*redis.Client, error) {
 		DialTimeout:  5 * time.Second,
 		ReadTimeout:  3 * time.Second,
 		WriteTimeout: 3 * time.Second,
-	})
+	}
+
+	// Enable TLS if required (e.g., for Upstash or other cloud Redis providers)
+	if cfg.TLSEnabled {
+		opts.TLSConfig = &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		}
+	}
+
+	client := redis.NewClient(opts)
 
 	// Test connection
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

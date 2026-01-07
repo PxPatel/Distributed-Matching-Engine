@@ -271,6 +271,7 @@ The server is configured via environment variables (`.env` file or system enviro
 | `REDIS_HOST` | `localhost` | Redis host |
 | `REDIS_PORT` | `6379` | Redis port |
 | `REDIS_PASSWORD` | *(empty)* | Redis password (if auth enabled) |
+| `REDIS_TLS_ENABLED` | `false` | Enable TLS/SSL encryption (required for Upstash, AWS ElastiCache with encryption) |
 | `REDIS_ORDER_TTL` | `24h` | Time-to-live for orders in cache |
 | `REDIS_MAX_ORDERS` | `50000` | Max orders in Redis (FIFO eviction) |
 | `REDIS_MAX_TRADES` | `10000` | Max trades in Redis (FIFO eviction) |
@@ -325,6 +326,37 @@ REDIS_ENABLED=true
 REDIS_HOST=redis.internal.example.com
 REDIS_PORT=6379
 REDIS_PASSWORD=redis_auth_token
+REDIS_ORDER_TTL=24h
+REDIS_MAX_ORDERS=50000
+REDIS_MAX_TRADES=10000
+
+DATABASE_ENABLED=true
+DATABASE_HOST=postgres.internal.example.com
+DATABASE_PORT=5432
+DATABASE_NAME=matching_engine
+DATABASE_USER=matching_engine_user
+DATABASE_PASSWORD=db_password_here
+DATABASE_MAX_CONNECTIONS=50
+
+TRADE_LOG_PATH=/var/log/matching_engine/trades.log
+```
+
+**Production with Cloud Redis (Upstash, AWS ElastiCache with TLS)**:
+```bash
+# .env
+PORT=8080
+LOG_LEVEL=INFO
+
+MEMORY_ENABLED=true
+MEMORY_MAX_ORDERS=100000
+MEMORY_MAX_TRADES=1000
+
+# Upstash Redis configuration (TLS required)
+REDIS_ENABLED=true
+REDIS_HOST=intimate-walleye-7953.upstash.io
+REDIS_PORT=6379
+REDIS_PASSWORD=your_upstash_password_here
+REDIS_TLS_ENABLED=true
 REDIS_ORDER_TTL=24h
 REDIS_MAX_ORDERS=50000
 REDIS_MAX_TRADES=10000

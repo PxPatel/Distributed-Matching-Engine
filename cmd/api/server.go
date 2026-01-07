@@ -142,6 +142,7 @@ func buildStorageLayers(cfg *config.Config) (storage.OrderStore, storage.TradeSt
 			MaxRetries:   cfg.Redis.MaxRetries,
 			PoolSize:     cfg.Redis.PoolSize,
 			MinIdleConns: cfg.Redis.MinIdleConns,
+			TLSEnabled:   cfg.Redis.TLSEnabled,
 			OrderTTL:     cfg.Redis.OrderTTL,
 			MaxOrders:    cfg.Redis.MaxOrders,
 			MaxTrades:    cfg.Redis.MaxTrades,
