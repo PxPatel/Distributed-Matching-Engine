@@ -34,7 +34,7 @@ func aggregatePriceLevels(prices []float64, getOrders func(float64) []*matching.
 
 			levels = append(levels, models.PriceLevel{
 				Price:      price,
-				Quantity:   totalQty,
+				Size:       totalQty,
 				OrderCount: len(orders),
 			})
 		}
@@ -50,14 +50,14 @@ func aggregatePriceLevels(prices []float64, getOrders func(float64) []*matching.
 		if aggregated[tickPrice] == nil {
 			aggregated[tickPrice] = &models.PriceLevel{
 				Price:      tickPrice,
-				Quantity:   0,
+				Size:       0,
 				OrderCount: 0,
 			}
 		}
 
 		orders := getOrders(price)
 		for _, order := range orders {
-			aggregated[tickPrice].Quantity += order.Size
+			aggregated[tickPrice].Size += order.Size
 			aggregated[tickPrice].OrderCount++
 		}
 	}
@@ -181,8 +181,8 @@ func (eh *EngineHolder) GetTopOfBookHandler(w http.ResponseWriter, r *http.Reque
 			totalQty += order.Size
 		}
 		bestBid = &models.BestQuote{
-			Price:    bestBidPrice,
-			Quantity: totalQty,
+			Price: bestBidPrice,
+			Size:  totalQty,
 		}
 	}
 
@@ -193,8 +193,8 @@ func (eh *EngineHolder) GetTopOfBookHandler(w http.ResponseWriter, r *http.Reque
 			totalQty += order.Size
 		}
 		bestAsk = &models.BestQuote{
-			Price:    bestAskPrice,
-			Quantity: totalQty,
+			Price: bestAskPrice,
+			Size:  totalQty,
 		}
 	}
 

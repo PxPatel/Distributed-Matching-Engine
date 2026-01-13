@@ -15,15 +15,16 @@ type TradeDTO struct {
 	BuyOrderID  uint64    `json:"buy_order_id"`
 	SellOrderID uint64    `json:"sell_order_id"`
 	Price       float64   `json:"price"`
-	Quantity    int       `json:"quantity"`
+	Symbol      string    `json:"symbol"`
+	Size        int       `json:"size"`
 	Timestamp   time.Time `json:"timestamp"`
 }
 
 // SubmitOrderResponse represents the response for order submission
 type SubmitOrderResponse struct {
 	BaseResponse
-	OrderID uint64      `json:"order_id,omitempty"`
-	Trades  []TradeDTO  `json:"trades,omitempty"`
+	OrderID uint64     `json:"order_id,omitempty"`
+	Trades  []TradeDTO `json:"trades,omitempty"`
 }
 
 // BatchOrderResult represents a single order result in batch submission
@@ -63,7 +64,7 @@ type OrderDTO struct {
 	OrderType         string    `json:"order_type"`
 	Side              string    `json:"side"`
 	Price             float64   `json:"price"`
-	Quantity          int       `json:"quantity"`
+	Size              int       `json:"size"`
 	FilledQuantity    int       `json:"filled_quantity,omitempty"`
 	RemainingQuantity int       `json:"remaining_quantity,omitempty"`
 	Status            string    `json:"status,omitempty"`
@@ -86,24 +87,24 @@ type GetOrdersResponse struct {
 // PriceLevel represents a price level in the order book
 type PriceLevel struct {
 	Price      float64 `json:"price"`
-	Quantity   int     `json:"quantity"`
+	Size       int     `json:"size"`
 	OrderCount int     `json:"order_count"`
 }
 
 // OrderBookResponse represents the full order book
 type OrderBookResponse struct {
 	BaseResponse
-	Symbol    string       `json:"symbol"`
-	Bids      []PriceLevel `json:"bids"`
-	Asks      []PriceLevel `json:"asks"`
-	Spread    float64      `json:"spread,omitempty"`
-	MidPrice  float64      `json:"mid_price,omitempty"`
+	Symbol   string       `json:"symbol"`
+	Bids     []PriceLevel `json:"bids"`
+	Asks     []PriceLevel `json:"asks"`
+	Spread   float64      `json:"spread,omitempty"`
+	MidPrice float64      `json:"mid_price,omitempty"`
 }
 
 // BestQuote represents the best bid or ask
 type BestQuote struct {
-	Price    float64 `json:"price"`
-	Quantity int     `json:"quantity"`
+	Price float64 `json:"price"`
+	Size  int     `json:"size"`
 }
 
 // TopOfBookResponse represents the best bid and ask

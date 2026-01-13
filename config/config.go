@@ -11,10 +11,13 @@ import (
 
 // Config holds all configuration for the application
 type Config struct {
-	Server ServerConfig
-	Engine EngineConfig
-	API    APIConfig
-	Logger LoggerConfig
+	Server   ServerConfig
+	Engine   EngineConfig
+	API      APIConfig
+	Logger   LoggerConfig
+	Memory   MemoryConfig
+	Database DatabaseConfig
+	Redis    RedisConfig
 }
 
 // ServerConfig holds HTTP server configuration
@@ -49,6 +52,43 @@ type LoggerConfig struct {
 	Level string // DEBUG, INFO, WARN, ERROR
 }
 
+// MemoryConfig holds in-memory storage configuration
+type MemoryConfig struct {
+	Enabled   bool
+	MaxOrders int
+	MaxTrades int
+}
+
+// DatabaseConfig holds PostgreSQL database configuration
+type DatabaseConfig struct {
+	Enabled         bool
+	Host            string
+	Port            int
+	Name            string
+	User            string
+	Password        string
+	MaxConns        int
+	MaxIdleConns    int
+	ConnMaxLifetime time.Duration
+	SSLMode         string
+}
+
+// RedisConfig holds Redis cache configuration
+type RedisConfig struct {
+	Enabled      bool
+	Host         string
+	Port         int
+	Password     string
+	DB           int
+	MaxRetries   int
+	PoolSize     int
+	MinIdleConns int
+	TLSEnabled   bool
+	OrderTTL     time.Duration
+	MaxOrders    int
+	MaxTrades    int
+}
+
 var instance *Config
 
 // Load loads configuration from .env file (if exists) and environment variables
@@ -65,7 +105,7 @@ func Load() (*Config, error) {
 			ShutdownTimeout: getEnvDuration("SERVER_SHUTDOWN_TIMEOUT", 10*time.Second),
 		},
 		Engine: EngineConfig{
-			TradeHistorySize: getEnvInt("TRADE_HISTORY_SIZE", 1000),
+			TradeHistorySize: getEnvInt("MEMORY_MAX_TRADES", 1000), // Deprecated: use Memory.MaxTrades
 			TradeLogPath:     getEnv("TRADE_LOG_PATH", "trades.log"),
 			OrderCleanupEnabled: getEnvBool("ORDER_CLEANUP_ENABLED", false),
 			OrderCleanupInterval: getEnvDuration("ORDER_CLEANUP_INTERVAL", 5*time.Minute),
@@ -80,6 +120,37 @@ func Load() (*Config, error) {
 		},
 		Logger: LoggerConfig{
 			Level: getEnv("LOG_LEVEL", "INFO"),
+		},
+		Memory: MemoryConfig{
+			Enabled:   getEnvBool("MEMORY_ENABLED", true),
+			MaxOrders: getEnvInt("MEMORY_MAX_ORDERS", 100000),
+			MaxTrades: getEnvInt("MEMORY_MAX_TRADES", 1000),
+		},
+		Database: DatabaseConfig{
+			Enabled:         getEnvBool("DATABASE_ENABLED", false),
+			Host:            getEnv("DATABASE_HOST", "localhost"),
+			Port:            getEnvInt("DATABASE_PORT", 5432),
+			Name:            getEnv("DATABASE_NAME", "matching_engine"),
+			User:            getEnv("DATABASE_USER", "postgres"),
+			Password:        getEnv("DATABASE_PASSWORD", ""),
+			MaxConns:        getEnvInt("DATABASE_MAX_CONNECTIONS", 20),
+			MaxIdleConns:    getEnvInt("DATABASE_MAX_IDLE_CONNECTIONS", 5),
+			ConnMaxLifetime: getEnvDuration("DATABASE_CONN_MAX_LIFETIME", 5*time.Minute),
+			SSLMode:         getEnv("DATABASE_SSL_MODE", "disable"),
+		},
+		Redis: RedisConfig{
+			Enabled:      getEnvBool("REDIS_ENABLED", false),
+			Host:         getEnv("REDIS_HOST", "localhost"),
+			Port:         getEnvInt("REDIS_PORT", 6379),
+			Password:     getEnv("REDIS_PASSWORD", ""),
+			DB:           getEnvInt("REDIS_DB", 0),
+			MaxRetries:   getEnvInt("REDIS_MAX_RETRIES", 3),
+			PoolSize:     getEnvInt("REDIS_POOL_SIZE", 10),
+			MinIdleConns: getEnvInt("REDIS_MIN_IDLE_CONNS", 2),
+			TLSEnabled:   getEnvBool("REDIS_TLS_ENABLED", false),
+			OrderTTL:     getEnvDuration("REDIS_ORDER_TTL", 24*time.Hour),
+			MaxOrders:    getEnvInt("REDIS_MAX_ORDERS", 50000),
+			MaxTrades:    getEnvInt("REDIS_MAX_TRADES", 10000),
 		},
 	}
 

@@ -35,7 +35,7 @@ func TestSimpleMarketOrderFlow(t *testing.T) {
 	assert.NotZero(t, buyResp.OrderID)
 	assert.Len(t, buyResp.Trades, 1, "Should have 1 trade")
 	assert.Equal(t, 100.0, buyResp.Trades[0].Price, "Should execute at best ask price")
-	assert.Equal(t, 10, buyResp.Trades[0].Quantity)
+	assert.Equal(t, 10, buyResp.Trades[0].Size)
 
 	// Step 3: Verify orderbook still has the second sell order
 	bidLevels, askLevels := ts.GetOrderBookDepth()
@@ -102,7 +102,7 @@ func TestAggressiveLimitOrderFlow(t *testing.T) {
 	assert.True(t, buyResp.Success)
 	assert.Len(t, buyResp.Trades, 1)
 	assert.Equal(t, 100.0, buyResp.Trades[0].Price)
-	assert.Equal(t, 10, buyResp.Trades[0].Quantity)
+	assert.Equal(t, 10, buyResp.Trades[0].Size)
 
 	// Verify remaining quantity in orderbook
 	obResp := ts.Get("/api/v1/orderbook")
@@ -110,7 +110,7 @@ func TestAggressiveLimitOrderFlow(t *testing.T) {
 	testutils.DecodeJSON(t, obResp, &ob)
 
 	assert.Len(t, ob.Asks, 1)
-	assert.Equal(t, 5, ob.Asks[0].Quantity, "Remaining 5 units should be in book")
+	assert.Equal(t, 5, ob.Asks[0].Size, "Remaining 5 units should be in book")
 }
 
 // TestPartialFillFlow tests orders that are partially filled
@@ -133,7 +133,7 @@ func TestPartialFillFlow(t *testing.T) {
 	assert.Len(t, buyResp.Trades, 2, "Should have 2 trades")
 
 	// Verify total filled quantity
-	totalFilled := buyResp.Trades[0].Quantity + buyResp.Trades[1].Quantity
+	totalFilled := buyResp.Trades[0].Size + buyResp.Trades[1].Size
 	assert.Equal(t, 13, totalFilled, "Should fill 5 + 8 = 13")
 
 	// Verify trades persist to disk
@@ -243,7 +243,7 @@ func TestCrossedOrderBookFlow(t *testing.T) {
 	// Should match at seller's price (100.0), not buyer's price
 	assert.Len(t, buyResp.Trades, 1)
 	assert.Equal(t, 100.0, buyResp.Trades[0].Price, "Should execute at resting order price")
-	assert.Equal(t, 10, buyResp.Trades[0].Quantity)
+	assert.Equal(t, 10, buyResp.Trades[0].Size)
 
 	// Book should be empty
 	bidLevels, askLevels := ts.GetOrderBookDepth()
@@ -271,11 +271,11 @@ func TestMultiLevelExecutionFlow(t *testing.T) {
 
 	// Verify trade prices (price improvement - executes at resting order prices)
 	assert.Equal(t, 100.0, buyResp.Trades[0].Price)
-	assert.Equal(t, 5, buyResp.Trades[0].Quantity)
+	assert.Equal(t, 5, buyResp.Trades[0].Size)
 	assert.Equal(t, 101.0, buyResp.Trades[1].Price)
-	assert.Equal(t, 10, buyResp.Trades[1].Quantity)
+	assert.Equal(t, 10, buyResp.Trades[1].Size)
 	assert.Equal(t, 102.0, buyResp.Trades[2].Price)
-	assert.Equal(t, 3, buyResp.Trades[2].Quantity)
+	assert.Equal(t, 3, buyResp.Trades[2].Size)
 
 	// Verify remaining asks
 	obResp := ts.Get("/api/v1/orderbook")
@@ -284,5 +284,5 @@ func TestMultiLevelExecutionFlow(t *testing.T) {
 
 	assert.Len(t, ob.Asks, 1, "One ask level should remain")
 	assert.Equal(t, 102.0, ob.Asks[0].Price)
-	assert.Equal(t, 5, ob.Asks[0].Quantity, "5 units remain from original 8")
+	assert.Equal(t, 5, ob.Asks[0].Size, "5 units remain from original 8")
 }

@@ -13,7 +13,7 @@ func NewMarketBuyOrder(userID string, quantity int) models.SubmitOrderRequest {
 		OrderType: "market",
 		Side:      "buy",
 		Price:     0,
-		Quantity:  quantity,
+		Size:      quantity,
 	}
 }
 
@@ -24,7 +24,7 @@ func NewMarketSellOrder(userID string, quantity int) models.SubmitOrderRequest {
 		OrderType: "market",
 		Side:      "sell",
 		Price:     0,
-		Quantity:  quantity,
+		Size:      quantity,
 	}
 }
 
@@ -35,7 +35,7 @@ func NewLimitBuyOrder(userID string, price float64, quantity int) models.SubmitO
 		OrderType: "limit",
 		Side:      "buy",
 		Price:     price,
-		Quantity:  quantity,
+		Size:      quantity,
 	}
 }
 
@@ -46,7 +46,7 @@ func NewLimitSellOrder(userID string, price float64, quantity int) models.Submit
 		OrderType: "limit",
 		Side:      "sell",
 		Price:     price,
-		Quantity:  quantity,
+		Size:      quantity,
 	}
 }
 

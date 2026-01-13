@@ -74,7 +74,7 @@ func convertTradesToDTO(trades []*matching.Trade) []models.TradeDTO {
 			BuyOrderID:  trade.BuyOrderID,
 			SellOrderID: trade.SellOrderID,
 			Price:       trade.Price,
-			Quantity:    trade.Size,
+			Size:        trade.Size,
 			Timestamp:   trade.Timestamp,
 		}
 	}
@@ -104,10 +104,11 @@ func (eh *EngineHolder) SubmitOrderHandler(w http.ResponseWriter, r *http.Reques
 	order := matching.NewOrder(
 		orderID,
 		req.UserID,
+		// req.Symbol,
 		convertOrderType(req.OrderType),
 		convertSide(req.Side),
 		req.Price,
-		req.Quantity,
+		req.Size,
 	)
 
 	// Submit order to engine
@@ -176,10 +177,11 @@ func (eh *EngineHolder) BatchOrderHandler(w http.ResponseWriter, r *http.Request
 			order := matching.NewOrder(
 				orderID,
 				orderReq.UserID,
+				// orderReq.Symbol,
 				convertOrderType(orderReq.OrderType),
 				convertSide(orderReq.Side),
 				orderReq.Price,
-				orderReq.Quantity,
+				orderReq.Size,
 			)
 
 			// Submit order to engine
@@ -397,7 +399,7 @@ func convertOrderToDTO(order *matching.Order) *models.OrderDTO {
 		OrderType: orderType,
 		Side:      side,
 		Price:     order.Price,
-		Quantity:  order.Size,
+		Size:      order.Size,
 		Status:    "open",
 		Timestamp: order.TimeStamp,
 	}

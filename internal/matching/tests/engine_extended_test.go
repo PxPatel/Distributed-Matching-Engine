@@ -168,8 +168,8 @@ func TestAddTradeToHistory(t *testing.T) {
 func TestTradeHistoryLimit(t *testing.T) {
 	// Create engine with small history
 	engine := matching.NewEngineWithConfig(&matching.EngineConfig{
-		TradeHistorySize: 5,
-		TradeLogPath:     "test_trades.log",
+		MaxOrders:    5,
+		TradeLogPath: "test_trades.log",
 	})
 	defer engine.Close()
 
