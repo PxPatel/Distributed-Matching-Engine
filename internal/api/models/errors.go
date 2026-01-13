@@ -7,11 +7,12 @@ type ErrorCode string
 
 const (
 	ErrInvalidRequest   ErrorCode = "INVALID_REQUEST"
-	ErrInvalidOrderId   ErrorCode = "INVALID ORDER_ID"
+	ErrInvalidOrderId   ErrorCode = "INVALID_ORDER_ID"
+	ErrEmptySymbol      ErrorCode = "INVALID_SYMBOL"
 	ErrInvalidOrderType ErrorCode = "INVALID_ORDER_TYPE"
 	ErrInvalidSide      ErrorCode = "INVALID_SIDE"
 	ErrInvalidPrice     ErrorCode = "INVALID_PRICE"
-	ErrInvalidQuantity  ErrorCode = "INVALID_QUANTITY"
+	ErrInvalidSize      ErrorCode = "INVALID_Size"
 	ErrMissingPrice     ErrorCode = "MISSING_PRICE"
 	ErrOrderNotFound    ErrorCode = "ORDER_NOT_FOUND"
 	ErrInternalError    ErrorCode = "INTERNAL_ERROR"
@@ -54,6 +55,12 @@ func ErrInvalidOrderIdError(providedType string) *HTTPError {
 		map[string]interface{}{"provided_value": providedType})
 }
 
+func ErrEmptySymbolError(symbol string) *HTTPError {
+	return NewHTTPError(http.StatusBadRequest, ErrEmptySymbol,
+		"Symbol can not be empty and must be supported",
+		nil)
+}
+
 func ErrInvalidOrderTypeError(providedType string) *HTTPError {
 	return NewHTTPError(http.StatusBadRequest, ErrInvalidOrderType,
 		"Invalid order type, must be 'market' or 'limit'",
@@ -72,10 +79,10 @@ func ErrInvalidPriceError(price float64) *HTTPError {
 		map[string]interface{}{"field": "price", "provided_value": price})
 }
 
-func ErrInvalidQuantityError(quantity int) *HTTPError {
-	return NewHTTPError(http.StatusBadRequest, ErrInvalidQuantity,
-		"Quantity must be positive",
-		map[string]interface{}{"field": "quantity", "provided_value": quantity})
+func ErrInvalidQuantityError(size int) *HTTPError {
+	return NewHTTPError(http.StatusBadRequest, ErrInvalidSize,
+		"Size must be positive",
+		map[string]interface{}{"field": "size", "provided_value": size})
 }
 
 func ErrMissingPriceError() *HTTPError {

@@ -8,10 +8,11 @@ import (
 type SubmitOrderRequest struct {
 	OrderID   string  `json:"order_id"`
 	UserID    string  `json:"user_id"`
+	Symbol    string  `json:"symbol"`
 	OrderType string  `json:"order_type"` // "market" | "limit" | "cancel"
 	Side      string  `json:"side"`       // "buy" | "sell"
 	Price     float64 `json:"price"`
-	Quantity  int     `json:"quantity"`
+	Size      int     `json:"size"`
 }
 
 // Validate validates the order request
@@ -19,6 +20,11 @@ func (r *SubmitOrderRequest) Validate() *HTTPError {
 	// Validate user_id
 	if strings.TrimSpace(r.UserID) == "" {
 		return ErrBadRequest("user_id cannot be empty", map[string]interface{}{"field": "user_id"})
+	}
+
+	// Validate symbol
+	if strings.TrimSpace(r.Symbol) == "" {
+		return ErrEmptySymbolError(r.Symbol)
 	}
 
 	// Validate order_type
@@ -34,8 +40,8 @@ func (r *SubmitOrderRequest) Validate() *HTTPError {
 	}
 
 	// Validate quantity
-	if r.Quantity <= 0 {
-		return ErrInvalidQuantityError(r.Quantity)
+	if r.Size <= 0 {
+		return ErrInvalidQuantityError(r.Size)
 	}
 
 	// Validate price for limit orders

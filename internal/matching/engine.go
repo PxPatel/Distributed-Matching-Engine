@@ -23,7 +23,6 @@ type Engine struct {
 type EngineConfig struct {
 	MaxOrders        int
 	MaxTrades        int
-	TradeHistorySize int    // Deprecated: use MaxTrades
 	TradeLogPath     string
 }
 
@@ -32,7 +31,6 @@ func NewEngine() *Engine {
 	return NewEngineWithConfig(&EngineConfig{
 		MaxOrders:        100000,
 		MaxTrades:        1000,
-		TradeHistorySize: 1000, // Deprecated
 		TradeLogPath:     "trades.log",
 	})
 }
@@ -45,9 +43,6 @@ func NewEngineWithConfig(cfg *EngineConfig) *Engine {
 
 	// Create trade store with fallback if file can't be opened
 	maxTrades := cfg.MaxTrades
-	if maxTrades == 0 && cfg.TradeHistorySize > 0 {
-		maxTrades = cfg.TradeHistorySize // Backward compatibility
-	}
 	memoryTradeStore := memory.NewInMemoryTradeStore(maxTrades)
 	fileTradeStore, err := file.NewFileTradeStore(cfg.TradeLogPath)
 

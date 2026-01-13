@@ -32,8 +32,8 @@ func NewTestServer(t testing.TB) *TestServer {
 
 	// Create engine with test configuration
 	engine := matching.NewEngineWithConfig(&matching.EngineConfig{
-		TradeHistorySize: 100,
-		TradeLogPath:     tradeLogPath,
+		MaxTrades:    100,
+		TradeLogPath: tradeLogPath,
 	})
 
 	// Create handler and server
